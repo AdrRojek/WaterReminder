@@ -1,55 +1,101 @@
-//
-//  ContentView.swift
-//  WaterReminder
-//
-//  Created by adrian on 16/02/2025.
-//
-
 import SwiftUI
 import SwiftData
 
+@Model
+class WaterProgress {
+    var progress: Double
+    var maxProgress: Double
+    
+    init(progress: Double = 0.0, maxProgress: Double = 4000) {
+        self.progress = progress
+        self.maxProgress = maxProgress
+    }
+}
+
 struct ContentView: View {
+    
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Query private var waterProgresses: [WaterProgress]
+    
+    @State private var water: Int = 0
+    
+    private var waterProgress: WaterProgress {
+        if let existing = waterProgresses.first {
+            return existing
+        } else {
+            let newProgress = WaterProgress()
+            modelContext.insert(newProgress)
+            return newProgress
+        }
+    }
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        VStack {
+            HStack {
+                Image(systemName: "drop.fill")
+                    .resizable()
+                    .frame(width: 50, height: 70)
+                    .foregroundColor(.blue)
+                
+                ProgressView(value: waterProgress.progress / waterProgress.maxProgress) {
+                    if waterProgress.progress < waterProgress.maxProgress {
+                        Text("Jeszcze \(Int(waterProgress.maxProgress - waterProgress.progress)) ml")
+                    } else {
+                        Text("Wypito!")
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .frame(width: 200, height: 20)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+            .padding()
+            
+            HStack {
+                Picker(selection: $water, label: Text("Ile wypiles?")) {
+                    ForEach(Array(stride(from: 50, through: 1000, by: 50)), id: \.self) {
+                        Text("\($0) ml")
                     }
                 }
+                .pickerStyle(WheelPickerStyle())
+                
+                if water != 0 {
+                    Button("Serio tyle wypito") {
+                        waterProgress.progress += Double(water)
+                        water = 0
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
             }
-        } detail: {
-            Text("Select an item")
+            .padding()
+            
+            VStack {
+                Text("apk3a3!")
+                    .font(.title)
+                    .padding()
+                
+                Button("Wypito 250ml") {
+                    waterProgress.progress += 250
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                Button("Wypito 500ml") {
+                    waterProgress.progress += 500
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+            .padding()
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+        .onAppear {
+            // Ensure there's always a WaterProgress instance
+            if waterProgresses.isEmpty {
+                modelContext.insert(WaterProgress())
             }
         }
     }
@@ -57,5 +103,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: WaterProgress.self) // Provide a model container for the preview
 }
