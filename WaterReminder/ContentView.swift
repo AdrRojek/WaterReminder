@@ -41,22 +41,21 @@ struct ContentView: View {
                     if waterProgress.progress < waterProgress.maxProgress {
                         Text("Jeszcze \(Int(waterProgress.maxProgress - waterProgress.progress)) ml")
                     } else {
-                        Text("Wypito!")
+                        Text("Wypito! Wypiłeś już \(Int(waterProgress.progress))ml")
                     }
                 }
-                .frame(width: 200, height: 20)
+                .frame(width: 250, height: 20)
             }
             .padding()
             
             HStack {
                 Picker(selection: $water, label: Text("Ile wypiles?")) {
-                    ForEach(Array(stride(from: 50, through: 1000, by: 50)), id: \.self) {
+                    ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) {
                         Text("\($0) ml")
                     }
                 }
                 .pickerStyle(WheelPickerStyle())
                 
-                if water != 0 {
                     Button("Serio tyle wypito") {
                         waterProgress.progress += Double(water)
                         water = 0
@@ -65,7 +64,7 @@ struct ContentView: View {
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                }
+                
             }
             .padding()
             
@@ -93,7 +92,6 @@ struct ContentView: View {
             .padding()
         }
         .onAppear {
-            // Ensure there's always a WaterProgress instance
             if waterProgresses.isEmpty {
                 modelContext.insert(WaterProgress())
             }
@@ -103,5 +101,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: WaterProgress.self) // Provide a model container for the preview
+        .modelContainer(for: WaterProgress.self)
 }
