@@ -5,97 +5,116 @@ import SwiftData
 class WaterProgress {
     var progress: Double
     var maxProgress: Double
+    var date: Date
     
     init(progress: Double = 0.0, maxProgress: Double = 4000) {
         self.progress = progress
         self.maxProgress = maxProgress
+        self.date = Date()
     }
 }
 
 struct ContentView: View {
-    
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     
     @State private var water: Int = 0
     
-    private var waterProgress: WaterProgress {
-        if let existing = waterProgresses.first {
-            return existing
-        } else {
-            let newProgress = WaterProgress()
-            modelContext.insert(newProgress)
-            return newProgress
-        }
-    }
-    
     var body: some View {
         VStack {
+
             HStack {
                 Image(systemName: "drop.fill")
                     .resizable()
                     .frame(width: 50, height: 70)
                     .foregroundColor(.blue)
                 
-                ProgressView(value: waterProgress.progress / waterProgress.maxProgress) {
-                    if waterProgress.progress < waterProgress.maxProgress {
-                        Text("Jeszcze \(Int(waterProgress.maxProgress - waterProgress.progress)) ml")
+                ProgressView(value: calculateTotalProgress(), total: 4000) {
+                    if calculateTotalProgress() < 4000 {
+                        Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
                     } else {
-                        Text("Wypito! Wypiłeś już \(Int(waterProgress.progress))ml")
+                        Text("Wypito!")
                     }
                 }
-                .frame(width: 250, height: 20)
+                .frame(width: 200, height: 20)
             }
             .padding()
             
             HStack {
-                Picker(selection: $water, label: Text("Ile wypiles?")) {
-                    ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) {
-                        Text("\($0) ml")
+                Picker(selection: $water, label: Text("Ile wypiłeś?")) {
+                    ForEach(Array(stride(from: 50, through: 1000, by: 50)), id: \.self) { value in
+                        Text("\(value) ml")
                     }
                 }
                 .pickerStyle(WheelPickerStyle())
                 
-                    Button("Serio tyle wypito") {
-                        waterProgress.progress += Double(water)
+                if water != 0 {
+                    Button("Dodaj") {
+                        addWaterProgress(Double(water))
                         water = 0
                     }
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                
+                }
             }
             .padding()
             
-            VStack {
-                Text("apk3a3!")
-                    .font(.title)
-                    .padding()
-                
-                Button("Wypito 250ml") {
-                    waterProgress.progress += 250
+            HStack {
+                Button("Wypito 250 ml") {
+                    addWaterProgress(250)
                 }
                 .padding()
-                .background(Color.blue)
+                .background(Color.green)
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 
-                Button("Wypito 500ml") {
-                    waterProgress.progress += 500
+                Button("Wypito 500 ml") {
+                    addWaterProgress(500)
                 }
                 .padding()
-                .background(Color.blue)
+                .background(Color.orange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
             .padding()
-        }
-        .onAppear {
-            if waterProgresses.isEmpty {
-                modelContext.insert(WaterProgress())
+            
+            Text("Historia z ostatnich dni")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+            
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(waterProgresses.sorted(by: { $0.date > $1.date })) { entry in
+                        HStack {
+                            Text("\(entry.date.formatted(date: .abbreviated, time: .shortened))")
+                            Spacer()
+                            Text("\(Int(entry.progress)) ml")
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal)
             }
+            .frame(height: 300)
+            
+            Spacer()
         }
+        .padding()
+    }
+    
+
+    private func addWaterProgress(_ amount: Double) {
+        let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
+        modelContext.insert(newEntry)
+    }
+    
+    private func calculateTotalProgress() -> Double {
+        waterProgresses.reduce(0) { $0 + $1.progress }
     }
 }
 
