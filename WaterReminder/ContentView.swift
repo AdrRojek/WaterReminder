@@ -12,7 +12,6 @@ class WaterProgress {
         self.progress = progress
         self.maxProgress = maxProgress
         self.date = Date()
-        
     }
 }
 
@@ -21,6 +20,8 @@ struct ContentView: View {
     @Query private var waterProgresses: [WaterProgress]
     
     @State private var water: Int = 0
+    @State private var showPopup = false
+    @State private var selectedAmount: Int = -50
     
     var body: some View {
         VStack {
@@ -49,15 +50,14 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 
-                    Button("Dodaj") {
-                        addOrUpdateWaterProgress(Double(water))
-                        water = 0
-                    }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                
+                Button("Dodaj") {
+                    addOrUpdateWaterProgress(Double(water))
+                    water = 0
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
             .padding()
             
@@ -77,7 +77,6 @@ struct ContentView: View {
                 .background(Color.orange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-                
             }
             .padding()
             
@@ -104,28 +103,70 @@ struct ContentView: View {
             .frame(height: 300)
             
             Spacer()
+            
+            Button("Jednak nie wypiłem") {
+                selectedAmount = -50
+                showPopup = true
+            }
+            .padding()
+            .background(Color.red)
+            .foregroundColor(.white)
+            .cornerRadius(10)
         }
         .padding()
-        
-        HStack{
-            Button("Jednak nie wypiłem") {
-                
-                print("")
+        .sheet(isPresented: $showPopup) {
+            HStack{
+                Button("Cofnij"){
+                    showPopup = false
+                }
             }
+            VStack {
+                Text("Ile chcesz odjąć?")
+                    .font(.headline)
+                    .padding()
+                
+                Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
+                    ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
+                        Text("\((value * -1)) ml")
+                    }
+                }
+                .pickerStyle(WheelPickerStyle())
+                .frame(height: 150)
+                
+                Button("Zatwierdź") {
+                    subtractWaterProgress(Double(selectedAmount))
+                    showPopup = false
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                
+            }
+            .padding()
         }
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
-        print("Dodawanie/aktualizacja wpisu: \(amount) ml")
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            print("Znaleziono istniejący wpis: \(existingEntry.progress) ml")
             existingEntry.progress += amount
         } else {
-            print("Tworzenie nowego wpisu")
             let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
             modelContext.insert(newEntry)
+        }
+    }
+    
+    private func subtractWaterProgress(_ amount: Double) {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            existingEntry.progress -= amount
+            if existingEntry.progress < 0 {
+                existingEntry.progress = 0
+            }
         }
     }
     
