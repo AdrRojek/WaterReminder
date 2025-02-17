@@ -158,15 +158,31 @@ struct ContentView: View {
             .padding()
         }
         .popover(isPresented: $showResetPopup){
-            VStack{
+            VStack(spacing: 50){
                 Text("Czy na pewno chcesz zresetować?")
+            
+            
+            HStack(spacing: 30){
+                
+                Button("Nie"){
+                    showResetPopup = false
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                
                 Button("Tak"){
                     resetWater()
                     showResetPopup = false
                 }
-                Button("Nie"){
-                    showResetPopup = false
-                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+            }
             }
         }
         .padding()
