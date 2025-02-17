@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 @Model
 class WaterProgress {
@@ -22,7 +23,6 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-
             HStack {
                 Image(systemName: "drop.fill")
                     .resizable()
@@ -33,7 +33,7 @@ struct ContentView: View {
                     if calculateTotalProgress() < 4000 {
                         Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
                     } else {
-                        Text("Wypito!")
+                        Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
                     }
                 }
                 .frame(width: 200, height: 20)
@@ -48,22 +48,21 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 
-                if water != 0 {
                     Button("Dodaj") {
-                        addWaterProgress(Double(water))
+                        addOrUpdateWaterProgress(Double(water))
                         water = 0
                     }
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                }
+                
             }
             .padding()
             
             HStack {
                 Button("Wypito 250 ml") {
-                    addWaterProgress(250)
+                    addOrUpdateWaterProgress(250)
                 }
                 .padding()
                 .background(Color.green)
@@ -71,12 +70,23 @@ struct ContentView: View {
                 .cornerRadius(10)
                 
                 Button("Wypito 500 ml") {
-                    addWaterProgress(500)
+                    addOrUpdateWaterProgress(500)
                 }
                 .padding()
                 .background(Color.orange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
+                
+                Button("Pokaż zawartość bazy") {
+                            print("Liczba wpisów: \(waterProgresses.count)") // Log
+                            for entry in waterProgresses {
+                                print("Data: \(entry.date), Ilość: \(entry.progress) ml") // Log
+                            }
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
             }
             .padding()
             
@@ -107,14 +117,28 @@ struct ContentView: View {
         .padding()
     }
     
-
-    private func addWaterProgress(_ amount: Double) {
-        let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
-        modelContext.insert(newEntry)
+    private func addOrUpdateWaterProgress(_ amount: Double) {
+        print("Dodawanie/aktualizacja wpisu: \(amount) ml")
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            print("Znaleziono istniejący wpis: \(existingEntry.progress) ml")
+            existingEntry.progress += amount
+        } else {
+            print("Tworzenie nowego wpisu")
+            let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
+            modelContext.insert(newEntry)
+        }
     }
     
     private func calculateTotalProgress() -> Double {
         waterProgresses.reduce(0) { $0 + $1.progress }
+    }
+    
+    private func printDatabaseContents() {
+        for entry in waterProgresses {
+            print("Data: \(entry.date), Ilość: \(entry.progress) ml")
+        }
     }
 }
 
