@@ -12,6 +12,7 @@ class WaterProgress {
         self.progress = progress
         self.maxProgress = maxProgress
         self.date = Date()
+        
     }
 }
 
@@ -77,16 +78,6 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 
-                Button("Pokaż zawartość bazy") {
-                            print("Liczba wpisów: \(waterProgresses.count)") // Log
-                            for entry in waterProgresses {
-                                print("Data: \(entry.date), Ilość: \(entry.progress) ml") // Log
-                            }
-                        }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
             }
             .padding()
             
