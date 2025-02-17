@@ -106,6 +106,13 @@ struct ContentView: View {
             Spacer()
         }
         .padding()
+        
+        HStack{
+            Button("Jednak nie wypiłem") {
+                
+                print("")
+            }
+        }
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
