@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var water: Int = 0
     @State private var showPopup = false
     @State private var selectedAmount: Int = -50
+    @State private var showResetPopup = false
     
     var body: some View {
         VStack {
@@ -142,10 +143,33 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 
+                Spacer()
+                
+                Button("Resetuj"){
+                    showResetPopup = true
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
                 
             }
             .padding()
         }
+        .popover(isPresented: $showResetPopup){
+            VStack{
+                Text("Czy na pewno chcesz zresetować?")
+                Button("Tak"){
+                    resetWater()
+                    showResetPopup = false
+                }
+                Button("Nie"){
+                    showResetPopup = false
+                }
+            }
+        }
+        .padding()
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
@@ -166,6 +190,18 @@ struct ContentView: View {
             existingEntry.progress -= amount
             if existingEntry.progress < 0 {
                 existingEntry.progress = 0
+            }
+        }
+    }
+    
+    private func resetWater(){
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            if existingEntry.progress != 0 {
+                existingEntry.progress = 0
+            } else {
+                Text("Nic dzisiaj nie wypiłeś")
             }
         }
     }
