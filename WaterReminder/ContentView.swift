@@ -18,18 +18,15 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                
-              FilledDrop(progress: calculateTotalProgress())
-
                 Button("Wyślij powiadomienie") {
                     scheduleNotification(withAmount: 250)
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 
-
+                FilledDrop(progress: calculateTotalProgress())
                 
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
