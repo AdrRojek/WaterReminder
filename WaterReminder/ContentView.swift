@@ -35,11 +35,15 @@ struct ContentView: View {
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
                         Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
+                            .foregroundStyle(calculateTotalProgress()<2000 ? .red :
+                                            (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
                     } else {
                         Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
+                            .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
                     }
                 }
                 .frame(width: 200, height: 20)
+                
             }
             .padding()
             
