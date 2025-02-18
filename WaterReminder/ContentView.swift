@@ -27,10 +27,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Image(systemName: "drop.fill")
-                    .resizable()
-                    .frame(width: 50, height: 70)
-                    .foregroundColor(.blue)
+                FilledDrop(progress: calculateTotalProgress())
                 
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
@@ -261,6 +258,30 @@ struct ContentView: View {
         }
     }
 }
+
+struct FilledDrop: View {
+    let progress: Double
+    
+    var body: some View {
+        ZStack {
+            Image(systemName: "drop.fill")
+                .resizable()
+                .frame(width: 50, height: 70)
+                .foregroundColor(.gray.opacity(0.5))
+            
+            Image(systemName: "drop.fill")
+                .resizable()
+                .frame(width: 50, height: 70)
+                .foregroundColor(.blue)
+                .mask(
+                    Rectangle()
+                        .frame(height: max(0, 70 * progress / 4000))
+                        .alignmentGuide(.bottom) { _ in 0 }
+                )
+        }
+    }
+}
+
 
 #Preview {
     ContentView()
