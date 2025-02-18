@@ -3,6 +3,9 @@ import SwiftData
 import UserNotifications
 
 struct ContentView: View {
+    init() {
+            requestNotificationPermission()
+        }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     
@@ -12,8 +15,10 @@ struct ContentView: View {
     @State private var showResetPopup = false
     
     var body: some View {
+        
         VStack {
             HStack {
+                
                 Image(systemName: "drop.fill")
                     .resizable()
                     .frame(width: 50, height: 70)
@@ -245,6 +250,25 @@ struct ContentView: View {
             print("Data: \(entry.date), Ilość: \(entry.progress) ml")
         }
     }
+    
+    func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
+        
+        center.requestAuthorization(options: options) { granted, error in
+            if granted {
+                print("Uprawnienia do powiadomień zostały przyznane.")
+            } else {
+                print("Uprawnienia do powiadomień nie zostały przyznane.")
+            }
+            
+            if let error = error {
+                print("Błąd podczas żądania uprawnień: \(error.localizedDescription)")
+            }
+        }
+    }
+    
 }
 
 #Preview {
