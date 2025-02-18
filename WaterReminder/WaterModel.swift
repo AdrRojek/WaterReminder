@@ -6,13 +6,16 @@ class WaterProgress {
     var progress: Double
     var maxProgress: Double
     var date: Date
-    
-    init(progress: Double = 0.0, maxProgress: Double = 4000) {
+    var startTime: Date
+
+    init(progress: Double = 0.0, maxProgress: Double = 4000, startTime: Date = Date()) {
         self.progress = progress
         self.maxProgress = maxProgress
         self.date = Date()
+        self.startTime = startTime
     }
 }
+
 
 class WatchModel: ObservableObject {
     @Published var waterProgresses: [WaterProgress] = []

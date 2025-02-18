@@ -18,13 +18,6 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                Button("Wyślij powiadomienie") {
-                    scheduleNotification(withAmount: 250)
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
                 
                 Image(systemName: "drop.fill")
                     .resizable()
@@ -34,6 +27,7 @@ struct ContentView: View {
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
                         Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
+                        
                     } else {
                         Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
                     }
@@ -307,30 +301,74 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
-}
+    private func initializeWaterProgress() {
+        let today = Calendar.current.startOfDay(for: Date())
 
-func scheduleNotification(withAmount amount: Int) {
-    let content = UNMutableNotificationContent()
-    content.title = "Wypij szklankę wody"
-    content.body = "Do wypicia: \(amount) ml"
-    content.sound = UNNotificationSound.default
-    content.categoryIdentifier = "WATER_REMINDER"
-    
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false) 
-    let request = UNNotificationRequest(
-        identifier: UUID().uuidString,
-        content: content,
-        trigger: trigger
-    )
-    
-    UNUserNotificationCenter.current().add(request) { error in
-        if let error = error {
-            print("Błąd podczas planowania powiadomienia: \(error.localizedDescription)")
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            // Jeśli już istnieje wpis, nic nie zmieniamy
         } else {
-            print("Powiadomienie zaplanowane z ilością \(amount) ml")
+            let newEntry = WaterProgress(progress: 0, maxProgress: 4000, startTime: Date())
+            modelContext.insert(newEntry)
+            scheduleNotifications(for: newEntry.startTime)
         }
     }
+    
+    private func calculateIntervals(startTime: Date) -> [Date] {
+        let endHour = 21
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        
+        guard let startHour = startComponents.hour else { return [] }
+        
+        let availableHours = endHour - startHour
+        let waterToDrink = 4000 - 500 - 500 // 500 ml rano i wieczorem
+        let glassSize = 250
+        let intervals = (waterToDrink / glassSize) // Ilość szklanek w ciągu dnia
+
+        let intervalDuration = availableHours / intervals // Co ile godzin powiadomienie
+        var notificationTimes: [Date] = []
+        
+        for i in 0..<intervals {
+            if let notifyTime = calendar.date(byAdding: .hour, value: i * intervalDuration, to: startTime) {
+                notificationTimes.append(notifyTime)
+            }
+        }
+
+        return notificationTimes
+    }
+
+    
+
+    func scheduleNotifications(for startTime: Date) {
+        let notificationTimes = calculateIntervals(startTime: startTime)
+        
+        for time in notificationTimes {
+            let content = UNMutableNotificationContent()
+            content.title = "Pora na wodę!"
+            content.body = "Wypij 250 ml"
+            content.sound = UNNotificationSound.default
+            content.categoryIdentifier = "WATER_REMINDER"
+
+            let triggerDate = Calendar.current.dateComponents([.hour, .minute], from: time)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
+
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Błąd: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
 }
+
+
 
 #Preview {
     ContentView()

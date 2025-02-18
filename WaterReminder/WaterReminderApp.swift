@@ -34,3 +34,25 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler()
     }
 }
+func scheduleNotification(withAmount amount: Int) {
+    let content = UNMutableNotificationContent()
+    content.title = "Pora na wodę!"
+    content.body = "Wypij \(amount) ml wody"
+    content.sound = UNNotificationSound.default
+    content.userInfo = ["amount": amount] // Przekazujemy ilość wody
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 900, repeats: false) // 15 min
+    
+    let request = UNNotificationRequest(
+        identifier: UUID().uuidString,
+        content: content,
+        trigger: trigger
+    )
+
+    UNUserNotificationCenter.current().add(request) { error in
+        if let error = error {
+            print("Błąd powiadomienia: \(error.localizedDescription)")
+        }
+    }
+}
+
