@@ -18,6 +18,9 @@ struct ContentView: View {
         
         VStack {
             HStack {
+                
+              FilledDrop(progress: calculateTotalProgress())
+
                 Button("Wyślij powiadomienie") {
                     scheduleNotification(withAmount: 250)
                 }
@@ -26,19 +29,20 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 
-                Image(systemName: "drop.fill")
-                    .resizable()
-                    .frame(width: 50, height: 70)
-                    .foregroundColor(.blue)
+
                 
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
                         Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
+                            .foregroundStyle(calculateTotalProgress()<2000 ? .red :
+                                            (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
                     } else {
                         Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
+                            .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
                     }
                 }
                 .frame(width: 200, height: 20)
+                
             }
             .padding()
             
@@ -331,6 +335,30 @@ func scheduleNotification(withAmount amount: Int) {
         }
     }
 }
+
+struct FilledDrop: View {
+    let progress: Double
+    
+    var body: some View {
+        ZStack {
+            Image(systemName: "drop.fill")
+                .resizable()
+                .frame(width: 50, height: 70)
+                .foregroundColor(.gray.opacity(0.5))
+            
+            Image(systemName: "drop.fill")
+                .resizable()
+                .frame(width: 50, height: 70)
+                .foregroundColor(.blue)
+                .mask(
+                    Rectangle()
+                        .frame(height: max(0, 70 * progress / 4000))
+                        .offset(y: (70 - (70 * progress / 4000)) / 2)
+                )
+        }
+    }
+}
+
 
 #Preview {
     ContentView()
