@@ -129,9 +129,10 @@ struct ContentView: View {
             .padding()
             VStack {
                 Text("Ile chcesz odjąć?")
-                    .font(.headline)
                     .padding()
-                
+                    .font(.system(size: 20))
+                    .fontWeight(.bold)
+
                 Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
                     ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
                         Text("\((value * -1)) ml")
@@ -170,6 +171,8 @@ struct ContentView: View {
         .popover(isPresented: $showResetPopup){
             VStack(spacing: 50){
                 Text("Czy na pewno chcesz zresetować?")
+                    .fontWeight(.bold)
+                    .font(.system(size: 20))
             
             
             HStack(spacing: 30){
@@ -195,8 +198,12 @@ struct ContentView: View {
                 
             }
             }
+            .presentationDetents([.height(500)])
+            .presentationDragIndicator(.visible)
         }
         .padding()
+        
+        
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
