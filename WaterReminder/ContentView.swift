@@ -276,7 +276,7 @@ struct FilledDrop: View {
                 .mask(
                     Rectangle()
                         .frame(height: max(0, 70 * progress / 4000))
-                        .alignmentGuide(.bottom) { _ in 0 }
+                        .offset(y: (70 - (70 * progress / 4000)) / 2)
                 )
         }
     }
