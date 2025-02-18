@@ -116,11 +116,17 @@ struct ContentView: View {
         }
         .padding()
         .sheet(isPresented: $showPopup) {
-            HStack{
+            VStack(alignment: .leading){
                 Button("Cofnij"){
                     showPopup = false
                 }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding()
             VStack {
                 Text("Ile chcesz odjąć?")
                     .font(.headline)
@@ -145,7 +151,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Button("Resetuj"){
+                Button("Resetuj cały dzień"){
                     showResetPopup = true
                 }
                 .padding()
@@ -156,7 +162,11 @@ struct ContentView: View {
                 
             }
             .padding()
+            .presentationDetents([.height(500)])
+            .presentationDragIndicator(.visible)
         }
+        
+        
         .popover(isPresented: $showResetPopup){
             VStack(spacing: 50){
                 Text("Czy na pewno chcesz zresetować?")
@@ -166,6 +176,7 @@ struct ContentView: View {
                 
                 Button("Nie"){
                     showResetPopup = false
+                    showPopup = true
                 }
                 .padding()
                 .background(Color.green)
