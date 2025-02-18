@@ -2,19 +2,6 @@ import SwiftUI
 import SwiftData
 import UserNotifications
 
-@Model
-class WaterProgress {
-    var progress: Double
-    var maxProgress: Double
-    var date: Date
-    
-    init(progress: Double = 0.0, maxProgress: Double = 4000) {
-        self.progress = progress
-        self.maxProgress = maxProgress
-        self.date = Date()
-    }
-}
-
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
