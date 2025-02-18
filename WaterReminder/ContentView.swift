@@ -18,6 +18,13 @@ struct ContentView: View {
         
         VStack {
             HStack {
+                Button("Wyślij powiadomienie") {
+                    scheduleNotification(withAmount: 250)
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
                 
                 Image(systemName: "drop.fill")
                     .resizable()
@@ -107,6 +114,16 @@ struct ContentView: View {
             .cornerRadius(10)
         }
         .padding()
+        .onAppear{
+            requestNotificationPermission()
+            createNotificationActions()
+            
+            NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
+                            if let amount = notification.userInfo?["amount"] as? Double {
+                                addOrUpdateWaterProgress(amount)
+                            }
+                        }
+        }
         .sheet(isPresented: $showPopup) {
             VStack(alignment: .leading){
                 Button("Cofnij"){
@@ -226,8 +243,6 @@ struct ContentView: View {
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
             if existingEntry.progress != 0 {
                 existingEntry.progress = 0
-            } else {
-                Text("Nic dzisiaj nie wypiłeś")
             }
         }
     }
@@ -269,6 +284,52 @@ struct ContentView: View {
         }
     }
     
+    func createNotificationActions() {
+        let drinkAction = UNNotificationAction(
+            identifier: "DRINK_ACTION",
+            title: "Wypito",
+            options: []
+        )
+        
+        let delayAction = UNNotificationAction(
+            identifier: "DELAY_ACTION",
+            title: "Nie mogę",
+            options: []
+        )
+        
+        let category = UNNotificationCategory(
+            identifier: "WATER_REMINDER",
+            actions: [drinkAction, delayAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+    
+}
+
+func scheduleNotification(withAmount amount: Int) {
+    let content = UNMutableNotificationContent()
+    content.title = "Wypij szklankę wody"
+    content.body = "Do wypicia: \(amount) ml"
+    content.sound = UNNotificationSound.default
+    content.categoryIdentifier = "WATER_REMINDER"
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false) 
+    let request = UNNotificationRequest(
+        identifier: UUID().uuidString,
+        content: content,
+        trigger: trigger
+    )
+    
+    UNUserNotificationCenter.current().add(request) { error in
+        if let error = error {
+            print("Błąd podczas planowania powiadomienia: \(error.localizedDescription)")
+        } else {
+            print("Powiadomienie zaplanowane z ilością \(amount) ml")
+        }
+    }
 }
 
 #Preview {
