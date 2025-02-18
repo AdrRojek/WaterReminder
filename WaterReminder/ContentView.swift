@@ -20,6 +20,9 @@ struct ContentView: View {
     @Query private var waterProgresses: [WaterProgress]
     
     @State private var water: Int = 0
+    @State private var showPopup = false
+    @State private var selectedAmount: Int = -50
+    @State private var showResetPopup = false
     
     var body: some View {
         VStack {
@@ -48,15 +51,14 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 
-                    Button("Dodaj") {
-                        addOrUpdateWaterProgress(Double(water))
-                        water = 0
-                    }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                
+                Button("Dodaj") {
+                    addOrUpdateWaterProgress(Double(water))
+                    water = 0
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
             .padding()
             
@@ -76,17 +78,6 @@ struct ContentView: View {
                 .background(Color.orange)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-                
-                Button("Pokaż zawartość bazy") {
-                            print("Liczba wpisów: \(waterProgresses.count)") // Log
-                            for entry in waterProgresses {
-                                print("Data: \(entry.date), Ilość: \(entry.progress) ml") // Log
-                            }
-                        }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
             }
             .padding()
             
@@ -113,26 +104,153 @@ struct ContentView: View {
             .frame(height: 300)
             
             Spacer()
+            
+            Button("Jednak nie wypiłem") {
+                selectedAmount = -50
+                showPopup = true
+            }
+            .padding()
+            .background(Color.red)
+            .foregroundColor(.white)
+            .cornerRadius(10)
         }
         .padding()
+        .sheet(isPresented: $showPopup) {
+            VStack(alignment: .leading){
+                Button("Cofnij"){
+                    showPopup = false
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding()
+            VStack {
+                Text("Ile chcesz odjąć?")
+                    .padding()
+                    .font(.system(size: 20))
+                    .fontWeight(.bold)
+
+                Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
+                    ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
+                        Text("\((value * -1)) ml")
+                    }
+                }
+                .pickerStyle(WheelPickerStyle())
+                .frame(height: 150)
+                
+                Button("Zatwierdź") {
+                    subtractWaterProgress(Double(selectedAmount))
+                    showPopup = false
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                Spacer()
+                
+                Button("Resetuj cały dzień"){
+                    showResetPopup = true
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                
+            }
+            .padding()
+            .presentationDetents([.height(500)])
+            .presentationDragIndicator(.visible)
+        }
+        
+        
+        .popover(isPresented: $showResetPopup){
+            VStack(spacing: 50){
+                Text("Czy na pewno chcesz zresetować?")
+                    .fontWeight(.bold)
+                    .font(.system(size: 20))
+            
+            
+            HStack(spacing: 30){
+                
+                Button("Nie"){
+                    showResetPopup = false
+                    showPopup = true
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                
+                Button("Tak"){
+                    resetWater()
+                    showResetPopup = false
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+            }
+            }
+            .presentationDetents([.height(500)])
+            .presentationDragIndicator(.visible)
+        }
+        .padding()
+        
+        
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
-        print("Dodawanie/aktualizacja wpisu: \(amount) ml")
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            print("Znaleziono istniejący wpis: \(existingEntry.progress) ml")
             existingEntry.progress += amount
         } else {
-            print("Tworzenie nowego wpisu")
             let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
             modelContext.insert(newEntry)
         }
     }
     
+    private func subtractWaterProgress(_ amount: Double) {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            existingEntry.progress -= amount
+            if existingEntry.progress < 0 {
+                existingEntry.progress = 0
+            }
+        }
+    }
+    
+    private func resetWater(){
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            if existingEntry.progress != 0 {
+                existingEntry.progress = 0
+            } else {
+                Text("Nic dzisiaj nie wypiłeś")
+            }
+        }
+    }
+    
     private func calculateTotalProgress() -> Double {
-        waterProgresses.reduce(0) { $0 + $1.progress }
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            if existingEntry.progress != 0 {
+                return existingEntry.progress
+            }else {
+                return 0
+            }
+        }
+        return 0
     }
     
     private func printDatabaseContents() {
