@@ -241,7 +241,16 @@ struct ContentView: View {
     }
     
     private func calculateTotalProgress() -> Double {
-        waterProgresses.reduce(0) { $0 + $1.progress }
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            if existingEntry.progress != 0 {
+                return existingEntry.progress
+            }else {
+                return 0
+            }
+        }
+        return 0
     }
     
     private func printDatabaseContents() {
