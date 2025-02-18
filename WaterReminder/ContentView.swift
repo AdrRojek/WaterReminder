@@ -238,8 +238,6 @@ struct ContentView: View {
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
             if existingEntry.progress != 0 {
                 existingEntry.progress = 0
-            } else {
-                Text("Nic dzisiaj nie wypiłeś")
             }
         }
     }
