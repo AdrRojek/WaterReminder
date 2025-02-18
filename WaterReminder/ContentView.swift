@@ -2,20 +2,10 @@ import SwiftUI
 import SwiftData
 import UserNotifications
 
-@Model
-class WaterProgress {
-    var progress: Double
-    var maxProgress: Double
-    var date: Date
-    
-    init(progress: Double = 0.0, maxProgress: Double = 4000) {
-        self.progress = progress
-        self.maxProgress = maxProgress
-        self.date = Date()
-    }
-}
-
 struct ContentView: View {
+    init() {
+            requestNotificationPermission()
+        }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     
@@ -25,9 +15,21 @@ struct ContentView: View {
     @State private var showResetPopup = false
     
     var body: some View {
+        
         VStack {
             HStack {
-                FilledDrop(progress: calculateTotalProgress())
+                
+              FilledDrop(progress: calculateTotalProgress())
+
+                Button("Wyślij powiadomienie") {
+                    scheduleNotification(withAmount: 250)
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+
                 
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
@@ -116,6 +118,16 @@ struct ContentView: View {
             .cornerRadius(10)
         }
         .padding()
+        .onAppear{
+            requestNotificationPermission()
+            createNotificationActions()
+            
+            NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
+                            if let amount = notification.userInfo?["amount"] as? Double {
+                                addOrUpdateWaterProgress(amount)
+                            }
+                        }
+        }
         .sheet(isPresented: $showPopup) {
             VStack(alignment: .leading){
                 Button("Cofnij"){
@@ -255,6 +267,71 @@ struct ContentView: View {
     private func printDatabaseContents() {
         for entry in waterProgresses {
             print("Data: \(entry.date), Ilość: \(entry.progress) ml")
+        }
+    }
+    
+    func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
+        
+        center.requestAuthorization(options: options) { granted, error in
+            if granted {
+                print("Uprawnienia do powiadomień zostały przyznane.")
+            } else {
+                print("Uprawnienia do powiadomień nie zostały przyznane.")
+            }
+            
+            if let error = error {
+                print("Błąd podczas żądania uprawnień: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func createNotificationActions() {
+        let drinkAction = UNNotificationAction(
+            identifier: "DRINK_ACTION",
+            title: "Wypito",
+            options: []
+        )
+        
+        let delayAction = UNNotificationAction(
+            identifier: "DELAY_ACTION",
+            title: "Nie mogę",
+            options: []
+        )
+        
+        let category = UNNotificationCategory(
+            identifier: "WATER_REMINDER",
+            actions: [drinkAction, delayAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+    
+}
+
+func scheduleNotification(withAmount amount: Int) {
+    let content = UNMutableNotificationContent()
+    content.title = "Wypij szklankę wody"
+    content.body = "Do wypicia: \(amount) ml"
+    content.sound = UNNotificationSound.default
+    content.categoryIdentifier = "WATER_REMINDER"
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false) 
+    let request = UNNotificationRequest(
+        identifier: UUID().uuidString,
+        content: content,
+        trigger: trigger
+    )
+    
+    UNUserNotificationCenter.current().add(request) { error in
+        if let error = error {
+            print("Błąd podczas planowania powiadomienia: \(error.localizedDescription)")
+        } else {
+            print("Powiadomienie zaplanowane z ilością \(amount) ml")
         }
     }
 }
