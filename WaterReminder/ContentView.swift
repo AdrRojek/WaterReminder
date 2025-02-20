@@ -96,7 +96,7 @@ struct ContentView: View {
                     
                     if boilerWater < 250 {
                         Button("Uzupełniony!"){
-                            boilerState()
+                            boilerWater = 2000
                         }
                         padding()
 
@@ -108,7 +108,7 @@ struct ContentView: View {
                     }else{
                         Button("Bojler 250 ml"){
                             addOrUpdateWaterProgress(250)
-                            boilerState()
+                            boilerWater -= 250
                         }
                         .padding()
                         .background(Color.orange)
@@ -415,16 +415,7 @@ struct ContentView: View {
         
         return recommendedWater
     }
-    
 
-    private func boilerState(){
-        
-        if (boilerWater == 0){
-            boilerWater = 2000
-        }else{
-            boilerWater -= 250
-        }
-    }
     
     
 }
