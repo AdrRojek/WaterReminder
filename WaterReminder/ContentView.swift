@@ -327,13 +327,7 @@ func scheduleNotification(withAmount amount: Int) {
         trigger: trigger
     )
     
-    UNUserNotificationCenter.current().add(request) { error in
-        if let error = error {
-            print("Błąd podczas planowania powiadomienia: \(error.localizedDescription)")
-        } else {
-            print("Powiadomienie zaplanowane z ilością \(amount) ml")
-        }
-    }
+    
 }
 
 struct FilledDrop: View {
