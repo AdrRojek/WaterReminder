@@ -20,19 +20,30 @@ struct ContentView: View {
             HStack {
                 
               FilledDrop(progress: calculateTotalProgress())
-               
-                ProgressView(value: calculateTotalProgress(), total: 4000) {
-                    if calculateTotalProgress() < 4000 {
-                        Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
-                            .foregroundStyle(calculateTotalProgress()<2000 ? .red :
-                                            (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
-                    } else {
-                        Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
-                            .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
+                VStack{
+                    ProgressView(value: calculateTotalProgress(), total: 4000) {
+                        if calculateTotalProgress() < 4000 {
+                            Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
+                                .foregroundStyle(calculateTotalProgress()<2000 ? .red :
+                                                    (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        } else {
+                            Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
+                                .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
                     }
+                    .frame(width: 250, height: 20)
+                    
+                    
+                    Text("Powinieneś mieć: \(calculateHourWater())")
+                        .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
+                        )
+                        .font(.custom("FONT_NAME", size: 10))
+                    
                 }
-                .frame(width: 200, height: 20)
-                
             }
             .padding()
             
@@ -120,6 +131,7 @@ struct ContentView: View {
                             }
                         }
         }
+        
         .sheet(isPresented: $showPopup) {
             VStack(alignment: .leading){
                 Button("Cofnij"){
@@ -346,6 +358,24 @@ struct ContentView: View {
                 break
             }
         }
+    }
+    
+    func calculateHourWater() -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let currentHour = calendar.component(.hour, from: now)
+        let currentMinute = calendar.component(.minute, from: now)
+        
+        let startHour = 10
+        let startMinute = 0
+        
+        let totalMinutesSinceStart = (currentHour - startHour) * 60 + (currentMinute - startMinute)
+        
+        let intervals = Int(ceil(Double(totalMinutesSinceStart) / 50.0))
+        
+        let recommendedWater = 250 * intervals
+        
+        return recommendedWater
     }
     
 
