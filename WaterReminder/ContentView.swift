@@ -97,6 +97,8 @@ struct ContentView: View {
                             Text("\(entry.date.formatted(date: .abbreviated, time: .shortened))")
                             Spacer()
                             Text("\(Int(entry.progress)) ml")
+                                .foregroundStyle(entry.progress < 2500 ? .red : (entry.progress < 4000 ? .yellow : .green))
+                                .fontWeight(.bold)
                         }
                         .padding()
                         .background(Color.gray.opacity(0.1))
