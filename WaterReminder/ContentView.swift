@@ -28,11 +28,13 @@ struct ContentView: View {
                                                     (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
+                                .fontWeight(.bold)
                         } else {
                             Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
                                 .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
+                                .fontWeight(.bold)
                         }
 
                     }
