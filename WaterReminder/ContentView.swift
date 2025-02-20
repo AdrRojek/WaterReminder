@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var showPopup = false
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
+    @State private var boilerWater = 2000
     
     var body: some View {
         
@@ -74,21 +75,48 @@ struct ContentView: View {
             .padding()
             
             HStack {
-                Button("Wypito 250 ml") {
-                    addOrUpdateWaterProgress(250)
+                VStack{
+                    Button("Wypito 250 ml") {
+                        addOrUpdateWaterProgress(250)
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    Button("Wypito 500 ml") {
+                        addOrUpdateWaterProgress(500)
+                    }
+                    .padding()
+                    .background(Color.orange)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                Button("Wypito 500 ml") {
-                    addOrUpdateWaterProgress(500)
+                VStack{
+                    
+                    if(boilerState() == 0) {
+                        Button("Uzupełniony!"){
+                            boilerState()
+                        }
+                        padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }else{
+                        Button("Bojler 250 ml"){
+                            addOrUpdateWaterProgress(250)
+                            boilerState()
+                        }
+                        .padding()
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    
+                    if(boilerState() == 0){
+                        Text("Uzupełnij bojler")
+                    }else{Text("Stan bojlera \(boilerState())")}
                 }
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
             }
             .padding()
             
@@ -114,7 +142,7 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
             }
-            .frame(height: 300)
+            .frame(height: 200)
             
             Spacer()
             
@@ -388,6 +416,15 @@ struct ContentView: View {
     }
     
 
+    private func boilerState() -> Int{
+        
+        if (boilerWater == 0){
+            boilerWater = 2000
+        }else{
+            boilerWater -= 250
+        }
+        return boilerWater
+    }
     
 }
 
