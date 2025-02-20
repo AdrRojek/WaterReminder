@@ -18,28 +18,33 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                Button("Wyślij powiadomienie") {
-                    scheduleNotification(withAmount: 250)
-                    }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
                 
-                FilledDrop(progress: calculateTotalProgress())
-                
-                ProgressView(value: calculateTotalProgress(), total: 4000) {
-                    if calculateTotalProgress() < 4000 {
-                        Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
-                            .foregroundStyle(calculateTotalProgress()<2000 ? .red :
-                                            (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
-                    } else {
-                        Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
-                            .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
+              FilledDrop(progress: calculateTotalProgress())
+                VStack{
+                    ProgressView(value: calculateTotalProgress(), total: 4000) {
+                        if calculateTotalProgress() < 4000 {
+                            Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
+                                .foregroundStyle(calculateTotalProgress()<2000 ? .red :
+                                                    (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        } else {
+                            Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
+                                .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+
                     }
+                    .frame(width: 250, height: 20)
+                    
+                    
+                    Text("Powinieneś mieć: \(calculateHourWater())")
+                        .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
+                        )
+                        .font(.custom("FONT_NAME", size: 10))
+                    
                 }
-                .frame(width: 200, height: 20)
-                
             }
             .padding()
             
@@ -93,6 +98,8 @@ struct ContentView: View {
                             Text("\(entry.date.formatted(date: .abbreviated, time: .shortened))")
                             Spacer()
                             Text("\(Int(entry.progress)) ml")
+                                .foregroundStyle(entry.progress < 2500 ? .red : (entry.progress < 4000 ? .yellow : .green))
+                                .fontWeight(.bold)
                         }
                         .padding()
                         .background(Color.gray.opacity(0.1))
@@ -119,12 +126,15 @@ struct ContentView: View {
             requestNotificationPermission()
             createNotificationActions()
             
+            scheduleDailyNotifications(withAmount: 250)
+            
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
                             if let amount = notification.userInfo?["amount"] as? Double {
                                 addOrUpdateWaterProgress(amount)
                             }
                         }
         }
+        
         .sheet(isPresented: $showPopup) {
             VStack(alignment: .leading){
                 Button("Cofnij"){
@@ -308,30 +318,74 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
-}
-
-func scheduleNotification(withAmount amount: Int) {
-    let content = UNMutableNotificationContent()
-    content.title = "Wypij szklankę wody"
-    content.body = "Do wypicia: \(amount) ml"
-    content.sound = UNNotificationSound.default
-    content.categoryIdentifier = "WATER_REMINDER"
-    
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false) 
-    let request = UNNotificationRequest(
-        identifier: UUID().uuidString,
-        content: content,
-        trigger: trigger
-    )
-    
-    UNUserNotificationCenter.current().add(request) { error in
-        if let error = error {
-            print("Błąd podczas planowania powiadomienia: \(error.localizedDescription)")
-        } else {
-            print("Powiadomienie zaplanowane z ilością \(amount) ml")
+     func scheduleDailyNotifications(withAmount amount: Int) {
+        let center = UNUserNotificationCenter.current()
+        
+        let content = UNMutableNotificationContent()
+        content.title = "Wypij szklankę wody"
+        content.body = "Do wypicia: \(amount) ml"
+        content.sound = UNNotificationSound.default
+        content.categoryIdentifier = "WATER_REMINDER"
+        
+        let calendar = Calendar.current
+        let now = Date()
+        
+        var dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: now)
+        dateComponents.hour = 10
+        dateComponents.minute = 0
+        
+        while dateComponents.hour! <= 22 {
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
+                } else {
+                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
+                }
+            }
+            
+            dateComponents.minute! += 50
+            if dateComponents.minute! >= 60 {
+                dateComponents.hour! += 1
+                dateComponents.minute! -= 60
+            }
+            
+            if dateComponents.hour! > 22 {
+                break
+            }
         }
     }
+    
+    func calculateHourWater() -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let currentHour = calendar.component(.hour, from: now)
+        let currentMinute = calendar.component(.minute, from: now)
+        
+        let startHour = 10
+        let startMinute = 0
+        
+        let totalMinutesSinceStart = (currentHour - startHour) * 60 + (currentMinute - startMinute)
+        
+        let intervals = Int(ceil(Double(totalMinutesSinceStart) / 50.0))
+        
+        let recommendedWater = 250 * intervals
+        
+        return recommendedWater
+    }
+    
+
+    
 }
+
+
 
 struct FilledDrop: View {
     let progress: Double

@@ -27,7 +27,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             NotificationCenter.default.post(name: NSNotification.Name("ADD_WATER"), object: nil, userInfo: ["amount": 250])
         } else if response.actionIdentifier == "DELAY_ACTION" {
             if let amount = userInfo["amount"] as? Int {
-                scheduleNotification(withAmount: amount + 250)
             }
         }
         
