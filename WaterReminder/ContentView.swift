@@ -94,12 +94,12 @@ struct ContentView: View {
                 }
                 VStack{
                     
-                    if(boilerState() == 0) {
+                    if(boilerState() == 250) {
                         Button("Uzupełniony!"){
                             boilerState()
                         }
                         padding()
-                        .background(Color.green)
+                        .background(Color.orange)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }else{
