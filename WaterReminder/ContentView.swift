@@ -100,22 +100,22 @@ struct ContentView: View {
                                 boilerWater -= 250
                         }
                         .padding()
-                        .background(Color.orange)
+                        .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
                         Text("Stan bojlera \(boilerWater)")
                     }else{
+                        Text("Uzupełnij bojler")
+                        
                         Button("Uzupełniony!"){
                             boilerWater = 2000
                         }
-                        padding()
-
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                         
-                        Text("Uzupełnij bojler")
                     }
                 }
             }
