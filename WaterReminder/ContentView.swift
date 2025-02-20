@@ -28,7 +28,7 @@ struct ContentView: View {
                                                     (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .font(.custom("FONT_NAME", size: 20))
+                                .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
 
                         } else {
@@ -36,7 +36,7 @@ struct ContentView: View {
                                 .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .font(.custom("FONT_NAME", size: 20))
+                                .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
                             
                         }
