@@ -94,7 +94,18 @@ struct ContentView: View {
                 }
                 VStack{
                     
-                    if boilerWater < 250 {
+                    if boilerWater > 249 {
+                        Button("Bojler 250 ml"){
+                                addOrUpdateWaterProgress(250)
+                                boilerWater -= 250
+                        }
+                        .padding()
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
+                        Text("Stan bojlera \(boilerWater)")
+                    }else{
                         Button("Uzupełniony!"){
                             boilerWater = 2000
                         }
@@ -105,17 +116,6 @@ struct ContentView: View {
                             .cornerRadius(10)
                         
                         Text("Uzupełnij bojler")
-                    }else{
-                        Button("Bojler 250 ml"){
-                            addOrUpdateWaterProgress(250)
-                            boilerWater -= 250
-                        }
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        
-                        Text("Stan bojlera \(boilerWater)")
                     }
                 }
             }
