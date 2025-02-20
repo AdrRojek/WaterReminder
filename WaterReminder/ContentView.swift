@@ -20,17 +20,7 @@ struct ContentView: View {
             HStack {
                 
               FilledDrop(progress: calculateTotalProgress())
-
-                Button("Wyślij powiadomienie") {
-                    scheduleNotification(withAmount: 250)
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-
-                
+               
                 ProgressView(value: calculateTotalProgress(), total: 4000) {
                     if calculateTotalProgress() < 4000 {
                         Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
@@ -121,6 +111,8 @@ struct ContentView: View {
         .onAppear{
             requestNotificationPermission()
             createNotificationActions()
+            
+            scheduleDailyNotifications(withAmount: 250)
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
                             if let amount = notification.userInfo?["amount"] as? Double {
@@ -311,24 +303,56 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
+     func scheduleDailyNotifications(withAmount amount: Int) {
+        let center = UNUserNotificationCenter.current()
+        
+        let content = UNMutableNotificationContent()
+        content.title = "Wypij szklankę wody"
+        content.body = "Do wypicia: \(amount) ml"
+        content.sound = UNNotificationSound.default
+        content.categoryIdentifier = "WATER_REMINDER"
+        
+        let calendar = Calendar.current
+        let now = Date()
+        
+        var dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: now)
+        dateComponents.hour = 10
+        dateComponents.minute = 0
+        
+        while dateComponents.hour! <= 22 {
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
+                } else {
+                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
+                }
+            }
+            
+            dateComponents.minute! += 50
+            if dateComponents.minute! >= 60 {
+                dateComponents.hour! += 1
+                dateComponents.minute! -= 60
+            }
+            
+            if dateComponents.hour! > 22 {
+                break
+            }
+        }
+    }
+    
+
+    
 }
 
-func scheduleNotification(withAmount amount: Int) {
-    let content = UNMutableNotificationContent()
-    content.title = "Wypij szklankę wody"
-    content.body = "Do wypicia: \(amount) ml"
-    content.sound = UNNotificationSound.default
-    content.categoryIdentifier = "WATER_REMINDER"
-    
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false) 
-    let request = UNNotificationRequest(
-        identifier: UUID().uuidString,
-        content: content,
-        trigger: trigger
-    )
-    
-    
-}
+
 
 struct FilledDrop: View {
     let progress: Double
