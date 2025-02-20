@@ -94,7 +94,6 @@ struct ContentView: View {
                 }
                 VStack{
                     
-
                     if boilerWater < 250 {
                         Button("Uzupełniony!"){
                             boilerState()
