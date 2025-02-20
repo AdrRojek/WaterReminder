@@ -94,27 +94,28 @@ struct ContentView: View {
                 }
                 VStack{
                     
-                    if boilerWater < 250 {
-                        Button("Uzupełniony!"){
-                            boilerState()
-                        }
-                        padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                        
-                        Text("Uzupełnij bojler")
-                    }else{
+                    if boilerWater > 249 {
                         Button("Bojler 250 ml"){
-                            addOrUpdateWaterProgress(250)
-                            boilerState()
+                                addOrUpdateWaterProgress(250)
+                                boilerWater -= 250
                         }
                         .padding()
-                        .background(Color.orange)
+                        .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
                         Text("Stan bojlera \(boilerWater)")
+                    }else{
+                        Text("Uzupełnij bojler")
+                        
+                        Button("Uzupełniony!"){
+                            boilerWater = 2000
+                        }
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
                     }
                 }
             }
@@ -414,16 +415,7 @@ struct ContentView: View {
         
         return recommendedWater
     }
-    
 
-    private func boilerState(){
-        
-        if (boilerWater == 0){
-            boilerWater = 2000
-        }else{
-            boilerWater -= 250
-        }
-    }
     
     
 }
