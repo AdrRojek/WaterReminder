@@ -34,6 +34,7 @@ struct ContentView: View {
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
                         }
+
                     }
                     .frame(width: 250, height: 20)
                     
