@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
     @State private var boilerWater = 2000
+    @State private var dailyCount = 0
     
     var body: some View {
         
@@ -425,12 +426,8 @@ struct ContentView: View {
         
         return recommendedWater
     }
-
-    
     
 }
-
-
 
 struct FilledDrop: View {
     let progress: Double
