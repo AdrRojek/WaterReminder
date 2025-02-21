@@ -19,6 +19,7 @@ struct ContentView: View {
     var body: some View {
         
         VStack {
+            Text("\(dailyCount)")
             HStack {
                 
               FilledDrop(progress: calculateTotalProgress())
@@ -63,6 +64,7 @@ struct ContentView: View {
                 Button("Dodaj") {
                     addOrUpdateWaterProgress(Double(water))
                     water = 0
+                    updateDailyCount()
                 }
                 .padding()
                 .background(Color.blue)
@@ -75,6 +77,7 @@ struct ContentView: View {
                 VStack{
                     Button("Wypito 250 ml") {
                         addOrUpdateWaterProgress(250)
+                        updateDailyCount()
                     }
                     .padding()
                     .background(Color.green)
@@ -83,6 +86,7 @@ struct ContentView: View {
                     
                     Button("Wypito 500 ml") {
                         addOrUpdateWaterProgress(500)
+                        updateDailyCount()
                     }
                     .padding()
                     .background(Color.orange)
@@ -95,6 +99,7 @@ struct ContentView: View {
                         Button("Bojler 250 ml"){
                                 addOrUpdateWaterProgress(250)
                                 boilerWater -= 250
+                                updateDailyCount()
                         }
                         .padding()
                         .background(Color.blue)
@@ -281,6 +286,28 @@ struct ContentView: View {
             let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
             modelContext.insert(newEntry)
         }
+    }
+    
+    func updateDailyCount() {
+        let sortedEntries = waterProgresses.sorted(by: { $0.date > $1.date })
+        
+        var count = 0
+        var previousDate: Date?
+        
+        for entry in sortedEntries {
+            if entry.progress >= 4000 {
+                if let prevDate = previousDate, Calendar.current.isDate(prevDate, inSameDayAs: entry.date) == false {
+                    count += 1
+                } else if previousDate == nil {
+                    count += 1
+                }
+            } else {
+                break
+            }
+            previousDate = entry.date
+        }
+        
+        dailyCount = count
     }
     
     private func subtractWaterProgress(_ amount: Double) {
