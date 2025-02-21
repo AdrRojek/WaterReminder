@@ -195,16 +195,29 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 .frame(height: 150)
-                
-                Button("Zatwierdź") {
-                    subtractWaterProgress(Double(selectedAmount))
-                    showPopup = false
+                HStack{
+                    Button("Woda") {
+                        subtractWaterProgress(Double(selectedAmount))
+                        showPopup = false
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    if boilerWater != 2000{
+                        Button("Boiler") {
+                            boilerWater += selectedAmount
+                            if boilerWater > 2000 {boilerWater = 2000}
+                            subtractWaterProgress(Double(selectedAmount))
+                            showPopup = false
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
                 }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
                 Spacer()
                 
                 Button("Resetuj cały dzień"){
