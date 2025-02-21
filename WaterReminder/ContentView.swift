@@ -104,7 +104,8 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        Text("Stan bojlera \(boilerWater)")
+                        Text("Stan bojlera: \(boilerWater)")
+                            .font(.custom("FONT_NAME", size: 10))
                     }else{
                         Text("Uzupełnij bojler")
                         
