@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import SwiftUIGIF
 
 struct ContentView: View {
     init() {
@@ -19,8 +20,15 @@ struct ContentView: View {
     var body: some View {
         
         VStack {
-            Text("\(dailyCount)")
             HStack {
+                if dailyCount > 3 {
+                    GIFImage(name: "fire")
+                        .frame(width: 15, height: 100)
+                }
+                Text("\(dailyCount)")
+            }
+            .frame(height: 5)
+                HStack {
                 
               FilledDrop(progress: calculateTotalProgress())
                 VStack{
