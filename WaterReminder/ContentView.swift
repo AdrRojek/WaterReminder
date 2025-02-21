@@ -31,7 +31,6 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
-
                         } else {
                             Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
                                 .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
@@ -39,18 +38,15 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
-                            
                         }
 
                     }
                     .frame(width: 250, height: 20)
                     
-                    
                     Text("Powinieneś mieć: \(calculateHourWater())")
                         .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
                         )
                         .font(.custom("FONT_NAME", size: 10))
-                    
                 }
             }
             .padding()
