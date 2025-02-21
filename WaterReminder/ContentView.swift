@@ -23,7 +23,7 @@ struct ContentView: View {
             HStack {
                 if dailyCount > 3 {
                     GIFImage(name: "fire")
-                        .frame(width: 15, height: 100)
+                        .frame(width: 30, height: 100)
                 }
                 Text("\(dailyCount)")
             }
