@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import Combine
 
 @Model
 class WaterProgress {
@@ -25,9 +26,11 @@ class AppSettings {
     }
 }
 
-class WatchModel: ObservableObject {
+class WaterModel: ObservableObject {
     @Published var waterProgresses: [WaterProgress] = []
     @Published var appSettings: AppSettings?
+    
+    private var cancellables = Set<AnyCancellable>()
     
     init() {
         loadAppSettings()
@@ -39,9 +42,28 @@ class WatchModel: ObservableObject {
         updateDailyCount()
     }
     
-    private func loadAppSettings() {
-        if appSettings == nil {
-            appSettings = AppSettings()
+    func subtractWaterProgress(_ amount: Double) {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            existingEntry.progress -= amount
+            if existingEntry.progress < 0 {
+                existingEntry.progress = 0
+            }
+        }
+    }
+    
+    func resetWater() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            existingEntry.progress = 0
+        }
+    }
+    
+    func updateBoilerWater(by amount: Int) {
+        guard var settings = appSettings else { return }
+        settings.boilerWater -= amount
+        if settings.boilerWater < 0 {
+            settings.boilerWater = 0
         }
     }
     
@@ -68,15 +90,9 @@ class WatchModel: ObservableObject {
         settings.dailyCount = count
     }
     
-    func updateBoilerWater(by amount: Int) {
-        guard var settings = appSettings else { return }
-        settings.boilerWater -= amount
-        if settings.boilerWater < 0 {
-            settings.boilerWater = 0
+    private func loadAppSettings() {
+        if appSettings == nil {
+            appSettings = AppSettings()
         }
-    }
-    
-    func resetAppSettings() {
-        appSettings = AppSettings()
     }
 }
