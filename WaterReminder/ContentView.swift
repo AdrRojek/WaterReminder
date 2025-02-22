@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var showResetPopup = false
     @State private var boilerWater = 2000
     @State private var dailyCount = 0
+    @StateObject private var watchModel = WatchModel()
+
     
     var body: some View {
         
@@ -25,7 +27,7 @@ struct ContentView: View {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
-                Text("\(dailyCount)")
+                Text("\(watchModel.appSettings?.dailyCount ?? 0)")
             }
             .frame(height: 5)
                 HStack {
