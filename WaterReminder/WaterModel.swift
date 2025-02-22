@@ -7,10 +7,10 @@ class WaterProgress {
     var maxProgress: Double
     var date: Date
     
-    init(progress: Double = 0.0, maxProgress: Double = 4000) {
+    init(progress: Double = 0.0, maxProgress: Double = 4000, date: Date = Date()) {
         self.progress = progress
         self.maxProgress = maxProgress
-        self.date = Date()
+        self.date = date
     }
 }
 
@@ -33,9 +33,16 @@ class WatchModel: ObservableObject {
         loadAppSettings()
     }
     
-    func addWaterProgress(_ progress: Double, maxProgress: Double = 4000) {
-        let newProgress = WaterProgress(progress: progress, maxProgress: maxProgress)
-        waterProgresses.append(newProgress)
+    func addWaterProgress(_ progress: Double, maxProgress: Double = 4000, date: Date = Date()) {
+        let today = Calendar.current.startOfDay(for: date)
+        
+        if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            existingEntry.progress += progress
+        } else {
+            let newProgress = WaterProgress(progress: progress, maxProgress: maxProgress, date: today)
+            waterProgresses.append(newProgress)
+        }
+        
         updateDailyCount()
     }
     
@@ -48,24 +55,15 @@ class WatchModel: ObservableObject {
     func updateDailyCount() {
         guard let settings = appSettings else { return }
         
-        let sortedEntries = waterProgresses.sorted(by: { $0.date > $1.date })
-        var count = 0
-        var previousDate: Date?
+        let completedDays = waterProgresses.filter { $0.progress >= 4000 }
         
-        for entry in sortedEntries {
-            if entry.progress >= 4000 {
-                if let prevDate = previousDate, Calendar.current.isDate(prevDate, inSameDayAs: entry.date) == false {
-                    count += 1
-                } else if previousDate == nil {
-                    count += 1
-                }
-            } else {
-                break
-            }
-            previousDate = entry.date
+        var uniqueDays: Set<Date> = []
+        for entry in completedDays {
+            let day = Calendar.current.startOfDay(for: entry.date)
+            uniqueDays.insert(day)
         }
         
-        settings.dailyCount = count
+        settings.dailyCount = uniqueDays.count
     }
     
     func updateBoilerWater(by amount: Int) {
