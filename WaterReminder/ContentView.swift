@@ -14,8 +14,6 @@ struct ContentView: View {
     @State private var showPopup = false
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
-    @State private var boilerWater = 2000
-    @State private var dailyCount = 0
     @StateObject private var watchModel = WatchModel()
 
     
@@ -23,11 +21,13 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                if dailyCount > 3 {
-                    GIFImage(name: "fire")
-                        .frame(width: 30, height: 100)
-                }
-                Text("\(watchModel.appSettings?.dailyCount ?? 0)")
+                if let settings = watchModel.appSettings, settings.dailyCount > 3 {
+                                    GIFImage(name: "fire")
+                                        .frame(width: 30, height: 100)
+                                }
+                                if let settings = watchModel.appSettings {
+                                    Text("\(settings.dailyCount)")
+                                }
             }
             .frame(height: 5)
                 HStack {
