@@ -55,15 +55,21 @@ class WatchModel: ObservableObject {
     func updateDailyCount() {
         guard let settings = appSettings else { return }
         
-        let completedDays = waterProgresses.filter { $0.progress >= 4000 }
+        var dailyProgress: [Date: Double] = [:]
         
-        var uniqueDays: Set<Date> = []
-        for entry in completedDays {
+        for entry in waterProgresses {
             let day = Calendar.current.startOfDay(for: entry.date)
-            uniqueDays.insert(day)
+            dailyProgress[day] = (dailyProgress[day] ?? 0) + entry.progress
         }
         
-        settings.dailyCount = uniqueDays.count
+        print("Daily progress: \(dailyProgress)")
+        
+        let completedDays = dailyProgress.filter { $0.value >= 4000 }
+        
+        print("Completed days: \(completedDays)")
+        
+        settings.dailyCount = completedDays.count
+        print("Updated dailyCount: \(settings.dailyCount)")
     }
     
     func updateBoilerWater(by amount: Int) {
