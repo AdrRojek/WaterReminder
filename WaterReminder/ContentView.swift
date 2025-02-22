@@ -5,8 +5,9 @@ import SwiftUIGIF
 
 struct ContentView: View {
     init() {
-            requestNotificationPermission()
-        }
+        requestNotificationPermission()
+    }
+    
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     
@@ -15,30 +16,30 @@ struct ContentView: View {
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
     @StateObject private var watchModel = WatchModel()
-
+    
+    @State private var boilerWater: Int = 2000
+    @State private var dailyCount: Int = 0
     
     var body: some View {
-        
         VStack {
             HStack {
                 if let settings = watchModel.appSettings, settings.dailyCount > 3 {
-                                    GIFImage(name: "fire")
-                                        .frame(width: 30, height: 100)
-                                }
-                                if let settings = watchModel.appSettings {
-                                    Text("\(settings.dailyCount)")
-                                }
+                    GIFImage(name: "fire")
+                        .frame(width: 30, height: 100)
+                }
+                if let settings = watchModel.appSettings {
+                    Text("\(settings.dailyCount)")
+                }
             }
             .frame(height: 5)
-                HStack {
-                
-              FilledDrop(progress: calculateTotalProgress())
-                VStack{
+            
+            HStack {
+                FilledDrop(progress: calculateTotalProgress())
+                VStack {
                     ProgressView(value: calculateTotalProgress(), total: 4000) {
                         if calculateTotalProgress() < 4000 {
                             Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
-                                .foregroundStyle(calculateTotalProgress()<2000 ? .red :
-                                                    (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
+                                .foregroundStyle(calculateTotalProgress() < 2000 ? .red : (calculateTotalProgress() < 4000 || calculateTotalProgress() > 1500) ? .yellow : .white)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.custom("FONT_NAME", size: 22))
@@ -51,13 +52,11 @@ struct ContentView: View {
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
                         }
-
                     }
                     .frame(width: 250, height: 20)
                     
                     Text("Powinieneś mieć: \(calculateHourWater())")
-                        .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
-                        )
+                        .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000 ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0 ? .yellow : .green))
                         .font(.custom("FONT_NAME", size: 10))
                 }
             }
@@ -84,7 +83,7 @@ struct ContentView: View {
             .padding()
             
             HStack {
-                VStack{
+                VStack {
                     Button("Wypito 250 ml") {
                         addOrUpdateWaterProgress(250)
                         updateDailyCount()
@@ -103,32 +102,30 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                 }
-                VStack{
-                    
+                VStack {
                     if boilerWater > 249 {
-                        Button("Bojler 250 ml"){
-                                addOrUpdateWaterProgress(250)
-                                boilerWater -= 250
-                                updateDailyCount()
+                        Button("Bojler 250 ml") {
+                            addOrUpdateWaterProgress(250)
+                            boilerWater -= 250
+                            updateDailyCount()
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        Text("Stan bojlera: \(watchModel.appSettings?.boilerWater ?? 0)")
+                        Text("Stan bojlera: \(boilerWater)")
                             .font(.custom("FONT_NAME", size: 10))
-                    }else{
+                    } else {
                         Text("Uzupełnij bojler")
                         
-                        Button("Uzupełniony!"){
+                        Button("Uzupełniony!") {
                             boilerWater = 2000
                         }
                         .padding()
                         .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(10)
-                        
                     }
                 }
             }
@@ -170,22 +167,20 @@ struct ContentView: View {
             .cornerRadius(10)
         }
         .padding()
-        .onAppear{
+        .onAppear {
             requestNotificationPermission()
             createNotificationActions()
-            
             scheduleDailyNotifications(withAmount: 250)
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
-                            if let amount = notification.userInfo?["amount"] as? Double {
-                                addOrUpdateWaterProgress(amount)
-                            }
-                        }
+                if let amount = notification.userInfo?["amount"] as? Double {
+                    addOrUpdateWaterProgress(amount)
+                }
+            }
         }
-        
         .sheet(isPresented: $showPopup) {
-            VStack(alignment: .leading){
-                Button("Cofnij"){
+            VStack(alignment: .leading) {
+                Button("Cofnij") {
                     showPopup = false
                 }
                 .padding()
@@ -208,7 +203,7 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 .frame(height: 150)
-                HStack{
+                HStack {
                     Button("Woda") {
                         subtractWaterProgress(Double(selectedAmount))
                         showPopup = false
@@ -218,10 +213,10 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                     
-                    if boilerWater != 2000{
+                    if boilerWater != 2000 {
                         Button("Boiler") {
                             boilerWater += selectedAmount
-                            if boilerWater > 2000 {boilerWater = 2000}
+                            if boilerWater > 2000 { boilerWater = 2000 }
                             subtractWaterProgress(Double(selectedAmount))
                             showPopup = false
                         }
@@ -233,58 +228,48 @@ struct ContentView: View {
                 }
                 Spacer()
                 
-                Button("Resetuj cały dzień"){
+                Button("Resetuj cały dzień") {
                     showResetPopup = true
                 }
                 .padding()
                 .background(Color.red)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-                
-                
             }
             .padding()
             .presentationDetents([.height(500)])
             .presentationDragIndicator(.visible)
         }
-        
-        
-        .popover(isPresented: $showResetPopup){
-            VStack(spacing: 50){
+        .popover(isPresented: $showResetPopup) {
+            VStack(spacing: 50) {
                 Text("Czy na pewno chcesz zresetować?")
                     .fontWeight(.bold)
                     .font(.system(size: 20))
-            
-            
-            HStack(spacing: 30){
                 
-                Button("Nie"){
-                    showResetPopup = false
-                    showPopup = true
+                HStack(spacing: 30) {
+                    Button("Nie") {
+                        showResetPopup = false
+                        showPopup = true
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    Button("Tak") {
+                        resetWater()
+                        showResetPopup = false
+                    }
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                
-                Button("Tak"){
-                    resetWater()
-                    showResetPopup = false
-                }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-            }
             }
             .presentationDetents([.height(500)])
             .presentationDragIndicator(.visible)
         }
         .padding()
-        
-        
     }
     
     private func addOrUpdateWaterProgress(_ amount: Double) {
@@ -331,7 +316,7 @@ struct ContentView: View {
         }
     }
     
-    private func resetWater(){
+    private func resetWater() {
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
@@ -347,7 +332,7 @@ struct ContentView: View {
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
             if existingEntry.progress != 0 {
                 return existingEntry.progress
-            }else {
+            } else {
                 return 0
             }
         }
@@ -401,7 +386,7 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
-     func scheduleDailyNotifications(withAmount amount: Int) {
+    func scheduleDailyNotifications(withAmount amount: Int) {
         let center = UNUserNotificationCenter.current()
         
         let content = UNMutableNotificationContent()
@@ -463,7 +448,6 @@ struct ContentView: View {
         
         return recommendedWater
     }
-    
 }
 
 struct FilledDrop: View {
@@ -488,7 +472,6 @@ struct FilledDrop: View {
         }
     }
 }
-
 
 #Preview {
     ContentView()
