@@ -5,7 +5,7 @@ import SwiftUIGIF
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var waterProgresses: [WaterProgress]
+    @ObservedObject private var waterModel = WaterModel()
     
     @State private var water: Int = 0
     @State private var showPopup = false
@@ -14,17 +14,19 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
+            // Header with GIF and daily count
             HStack {
-                if let settings = watchModel.appSettings, settings.dailyCount > 3 {
+                if let settings = waterModel.appSettings, settings.dailyCount > 3 {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
-                if let settings = watchModel.appSettings {
+                if let settings = waterModel.appSettings {
                     Text("\(settings.dailyCount)")
                 }
             }
             .frame(height: 5)
             
+            // Water progress view
             HStack {
                 FilledDrop(progress: calculateTotalProgress())
                 VStack {
@@ -54,6 +56,7 @@ struct ContentView: View {
             }
             .padding()
             
+            // Water input controls
             HStack {
                 Picker(selection: $water, label: Text("Ile wypiłeś?")) {
                     ForEach(Array(stride(from: 50, through: 1000, by: 50)), id: \.self) { value in
@@ -63,9 +66,8 @@ struct ContentView: View {
                 .pickerStyle(WheelPickerStyle())
                 
                 Button("Dodaj") {
-                    watchModel.addWaterProgress(Double(water))
+                    waterModel.addWaterProgress(Double(water))
                     water = 0
-                    watchModel.updateDailyCount()
                 }
                 .padding()
                 .background(Color.blue)
@@ -74,11 +76,11 @@ struct ContentView: View {
             }
             .padding()
             
+            // Quick action buttons
             HStack {
                 VStack {
                     Button("Wypito 250 ml") {
-                        watchModel.addWaterProgress(250)
-                        watchModel.updateDailyCount()
+                        waterModel.addWaterProgress(250)
                     }
                     .padding()
                     .background(Color.green)
@@ -86,8 +88,7 @@ struct ContentView: View {
                     .cornerRadius(10)
                     
                     Button("Wypito 500 ml") {
-                        watchModel.addWaterProgress(500)
-                        watchModel.updateDailyCount()
+                        waterModel.addWaterProgress(500)
                     }
                     .padding()
                     .background(Color.orange)
@@ -96,18 +97,17 @@ struct ContentView: View {
                 }
                 
                 VStack {
-                    if let settings = watchModel.appSettings, settings.boilerWater > 249 {
+                    if let settings = waterModel.appSettings, settings.boilerWater > 249 {
                         Button("Bojler 250 ml") {
-                            watchModel.addWaterProgress(250)
-                            watchModel.updateBoilerWater(by: 250)
-                            watchModel.updateDailyCount()
+                            waterModel.addWaterProgress(250)
+                            waterModel.updateBoilerWater(by: 250)
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        if let settings = watchModel.appSettings {
+                        if let settings = waterModel.appSettings {
                             Text("Stan bojlera: \(settings.boilerWater)")
                                 .font(.custom("FONT_NAME", size: 10))
                         }
@@ -115,7 +115,7 @@ struct ContentView: View {
                         Text("Uzupełnij bojler")
                         
                         Button("Uzupełniony!") {
-                            watchModel.appSettings?.boilerWater = 2000
+                            waterModel.appSettings?.boilerWater = 2000
                         }
                         .padding()
                         .background(Color.green)
@@ -126,6 +126,7 @@ struct ContentView: View {
             }
             .padding()
             
+            // History view
             Text("Historia z ostatnich dni")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -133,9 +134,9 @@ struct ContentView: View {
             
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(watchModel.waterProgresses.sorted(by: { $0.date > $1.date })) { entry in
+                    ForEach(waterModel.waterProgresses.sorted(by: { $0.date > $1.date })) { entry in
                         HStack {
-                            Text("\(entry.date.formatted(date: .abbreviated, time: .shortened))")
+                            Text("\(entry.date.formatted(date: .abbreviated, time: .omitted))")
                             Spacer()
                             Text("\(Int(entry.progress)) ml")
                                 .foregroundStyle(entry.progress < 2500 ? .red : (entry.progress < 4000 ? .yellow : .green))
@@ -152,6 +153,7 @@ struct ContentView: View {
             
             Spacer()
             
+            // Undo button
             Button("Jednak nie wypiłem") {
                 selectedAmount = -50
                 showPopup = true
@@ -166,202 +168,15 @@ struct ContentView: View {
             requestNotificationPermission()
             createNotificationActions()
             scheduleDailyNotifications(withAmount: 250)
-            
-            NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
-                if let amount = notification.userInfo?["amount"] as? Double {
-                    watchModel.addWaterProgress(amount)
-                }
-            }
         }
-        .sheet(isPresented: $showPopup) {
-            VStack(alignment: .leading) {
-                Button("Cofnij") {
-                    showPopup = false
-                }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding()
-            VStack {
-                Text("Ile chcesz odjąć?")
-                    .padding()
-                    .font(.system(size: 20))
-                    .fontWeight(.bold)
-
-                Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
-                    ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
-                        Text("\((value * -1)) ml")
-                    }
-                }
-                .pickerStyle(WheelPickerStyle())
-                .frame(height: 150)
-                HStack {
-                    Button("Woda") {
-                        watchModel.subtractWaterProgress(Double(selectedAmount))
-                        showPopup = false
-                    }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    
-                    if watchModel.appSettings?.boilerWater != 2000 {
-                        Button("Boiler") {
-                            watchModel.appSettings?.boilerWater += selectedAmount
-                            if watchModel.appSettings?.boilerWater ?? 0 > 2000 {
-                                watchModel.appSettings?.boilerWater = 2000
-                            }
-                            watchModel.subtractWaterProgress(Double(selectedAmount))
-                            showPopup = false
-                        }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                    }
-                }
-                Spacer()
-                
-                Button("Resetuj cały dzień") {
-                    showResetPopup = true
-                }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            .padding()
-            .presentationDetents([.height(500)])
-            .presentationDragIndicator(.visible)
-        }
-        .popover(isPresented: $showResetPopup) {
-            VStack(spacing: 50) {
-                Text("Czy na pewno chcesz zresetować?")
-                    .fontWeight(.bold)
-                    .font(.system(size: 20))
-                
-                HStack(spacing: 30) {
-                    Button("Nie") {
-                        showResetPopup = false
-                        showPopup = true
-                    }
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    
-                    Button("Tak") {
-                        watchModel.resetWater()
-                        showResetPopup = false
-                    }
-                    .padding()
-                    .background(Color.red)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-            }
-            .presentationDetents([.height(500)])
-            .presentationDragIndicator(.visible)
-        }
-        .padding()
     }
     
     private func calculateTotalProgress() -> Double {
         let today = Calendar.current.startOfDay(for: Date())
-        
-        if let existingEntry = watchModel.waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+        if let existingEntry = waterModel.waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
             return existingEntry.progress
         }
         return 0
-    }
-    
-    private func requestNotificationPermission() {
-        let center = UNUserNotificationCenter.current()
-        
-        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
-        
-        center.requestAuthorization(options: options) { granted, error in
-            if granted {
-                print("Uprawnienia do powiadomień zostały przyznane.")
-            } else {
-                print("Uprawnienia do powiadomień nie zostały przyznane.")
-            }
-            
-            if let error = error {
-                print("Błąd podczas żądania uprawnień: \(error.localizedDescription)")
-            }
-        }
-    }
-    
-    private func createNotificationActions() {
-        let drinkAction = UNNotificationAction(
-            identifier: "DRINK_ACTION",
-            title: "Wypito",
-            options: []
-        )
-        
-        let delayAction = UNNotificationAction(
-            identifier: "DELAY_ACTION",
-            title: "Nie mogę",
-            options: []
-        )
-        
-        let category = UNNotificationCategory(
-            identifier: "WATER_REMINDER",
-            actions: [drinkAction, delayAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        UNUserNotificationCenter.current().setNotificationCategories([category])
-    }
-    
-    private func scheduleDailyNotifications(withAmount amount: Int) {
-        let center = UNUserNotificationCenter.current()
-        
-        let content = UNMutableNotificationContent()
-        content.title = "Wypij szklankę wody"
-        content.body = "Do wypicia: \(amount) ml"
-        content.sound = UNNotificationSound.default
-        content.categoryIdentifier = "WATER_REMINDER"
-        
-        let calendar = Calendar.current
-        let now = Date()
-        
-        var dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: now)
-        dateComponents.hour = 10
-        dateComponents.minute = 0
-        
-        while dateComponents.hour! <= 22 {
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            
-            let request = UNNotificationRequest(
-                identifier: UUID().uuidString,
-                content: content,
-                trigger: trigger
-            )
-            
-            center.add(request) { error in
-                if let error = error {
-                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
-                } else {
-                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
-                }
-            }
-            
-            dateComponents.minute! += 50
-            if dateComponents.minute! >= 60 {
-                dateComponents.hour! += 1
-                dateComponents.minute! -= 60
-            }
-            
-            if dateComponents.hour! > 22 {
-                break
-            }
-        }
     }
     
     private func calculateHourWater() -> Int {
@@ -374,12 +189,53 @@ struct ContentView: View {
         let startMinute = 0
         
         let totalMinutesSinceStart = (currentHour - startHour) * 60 + (currentMinute - startMinute)
-        
         let intervals = Int(ceil(Double(totalMinutesSinceStart) / 50.0))
+        return 250 * intervals
+    }
+    
+    private func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("Notification permission granted.")
+            } else if let error = error {
+                print("Error requesting notification permission: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func createNotificationActions() {
+        let drinkAction = UNNotificationAction(identifier: "DRINK_ACTION", title: "Wypito", options: [])
+        let delayAction = UNNotificationAction(identifier: "DELAY_ACTION", title: "Nie mogę", options: [])
+        let category = UNNotificationCategory(identifier: "WATER_REMINDER", actions: [drinkAction, delayAction], intentIdentifiers: [], options: [])
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+    
+    private func scheduleDailyNotifications(withAmount amount: Int) {
+        let center = UNUserNotificationCenter.current()
+        let content = UNMutableNotificationContent()
+        content.title = "Wypij szklankę wody"
+        content.body = "Do wypicia: \(amount) ml"
+        content.sound = .default
+        content.categoryIdentifier = "WATER_REMINDER"
         
-        let recommendedWater = 250 * intervals
+        var dateComponents = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        dateComponents.hour = 10
+        dateComponents.minute = 0
         
-        return recommendedWater
+        for hour in 10...22 {
+            dateComponents.hour = hour
+            for minute in stride(from: 0, to: 60, by: 50) {
+                dateComponents.minute = minute
+                let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+                let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+                center.add(request) { error in
+                    if let error = error {
+                        print("Error scheduling notification: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
     }
 }
 
