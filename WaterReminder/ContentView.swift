@@ -11,6 +11,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     @Query private var boilerModels: [BoilerModel]
+    @Query private var dailyCountModels: [DailyCountModel]
     
     @State private var water: Int = 0
     @State private var showPopup = false
@@ -27,7 +28,7 @@ struct ContentView: View {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
-                Text("\(dailyCount)")
+                Text("\(calculateStreak())")
             }
             .frame(height: 5)
                 HStack {
@@ -322,6 +323,7 @@ struct ContentView: View {
             let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
             modelContext.insert(newEntry)
         }
+        updateDailyCountModel()
     }
     
     func updateDailyCount() {
@@ -344,6 +346,55 @@ struct ContentView: View {
         }
         
         dailyCount = count
+    }
+    
+    private func updateDailyCountModel() {
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        // Sprawdź, czy istnieje rekord dla dzisiejszego dnia
+        if let existingEntry = dailyCountModels.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            // Jeśli cel został osiągnięty, ustaw `done` na true
+            if calculateTotalProgress() >= 4000 {
+                existingEntry.done = true
+            } else {
+                existingEntry.done = false
+            }
+        } else {
+            // Jeśli rekord nie istnieje, twóutwórz nowy
+            let newEntry = DailyCountModel(dailyCount: 0, date: today, done: calculateTotalProgress() >= 4000)
+            modelContext.insert(newEntry)
+        }
+        
+        // Zapisz zmiany w bazie danych
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save daily count model: \(error.localizedDescription)")
+        }
+    }
+    
+    private func calculateStreak() -> Int {
+        let sortedEntries = dailyCountModels.sorted(by: { $0.date > $1.date })
+        
+        var streak = 0
+        var previousDate = Calendar.current.startOfDay(for: Date())
+        
+        for entry in sortedEntries {
+            if Calendar.current.isDate(entry.date, inSameDayAs: previousDate) && entry.done {
+                streak += 1
+            } else {
+                break
+            }
+            
+            // Przesuń datę o dzień wstecz
+            if let nextDate = Calendar.current.date(byAdding: .day, value: -1, to: previousDate) {
+                previousDate = Calendar.current.startOfDay(for: nextDate)
+            } else {
+                break
+            }
+        }
+        
+        return streak
     }
     
     private func subtractWaterProgress(_ amount: Double) {
@@ -480,13 +531,13 @@ struct ContentView: View {
                 trigger: trigger
             )
             
-//            center.add(request) { error in
-//                if let error = error {
-//                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
-//                } else {
-//                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
-//                }
-//            }
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
+                } else {
+                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
+                }
+            }
             
             dateComponents.minute! += 50
             if dateComponents.minute! >= 60 {
@@ -546,5 +597,5 @@ struct FilledDrop: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [WaterProgress.self, BoilerModel.self])
+        .modelContainer(for: [WaterProgress.self, BoilerModel.self, DailyCountModel.self])
 }
