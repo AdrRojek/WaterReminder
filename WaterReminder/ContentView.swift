@@ -515,6 +515,11 @@ struct ContentView: View {
         content.sound = UNNotificationSound.default
         content.categoryIdentifier = "WATER_REMINDER"
         
+        if let imageURL = Bundle.main.url(forResource: "water", withExtension: "png"),
+            let attachment = try? UNNotificationAttachment(identifier: "waterIcon", url: imageURL, options: nil) {
+            content.attachments = [attachment]
+        }
+         
         let calendar = Calendar.current
         let now = Date()
         
