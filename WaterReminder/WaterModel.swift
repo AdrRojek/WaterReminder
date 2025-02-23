@@ -33,7 +33,26 @@ class WaterModel: ObservableObject {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         loadAppSettings()
+        fetchSettings()
     }
+    
+    func setup(modelContext: ModelContext) {
+            self.modelContext = modelContext
+            fetchSettings()
+        }
+    
+    private func fetchSettings() {
+            let descriptor = FetchDescriptor<AppSettings>()
+            do {
+                appSettings = try modelContext.fetch(descriptor).first ?? AppSettings()
+                if appSettings?.boilerWater == nil {
+                    appSettings = AppSettings()
+                    modelContext.insert(appSettings!)
+                }
+            } catch {
+                print("Failed to fetch settings")
+            }
+        }
     
     func addWaterProgress(_ progress: Double, maxProgress: Double = 4000, date: Date = Date()) {
         let today = Calendar.current.startOfDay(for: date)
@@ -89,10 +108,8 @@ class WaterModel: ObservableObject {
     }
     
     func updateBoilerWater(by amount: Int) {
-            guard let settings = appSettings else { return }
-            settings.boilerWater -= amount
-            if settings.boilerWater < 0 { settings.boilerWater = 0 }
-            saveAppSettings()
+            appSettings?.boilerWater = (appSettings?.boilerWater ?? 2000) - amount
+            try? modelContext.save()
         }
     
     func resetAppSettings() {

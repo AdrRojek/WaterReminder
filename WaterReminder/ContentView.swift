@@ -5,7 +5,7 @@ import SwiftUIGIF
 
 struct ContentView: View {
     init(modelContext: ModelContext) {
-        _waterModel = StateObject(wrappedValue: WaterModel(modelContext: modelContext))
+        _waterModel = StateObject(wrappedValue: WaterModel(modelContext: ModelContext(try! ModelContainer(for: WaterProgress.self))))
         requestNotificationPermission()
     }
     
@@ -17,10 +17,7 @@ struct ContentView: View {
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
     @StateObject private var waterModel: WaterModel
-    
-    @State private var boilerWater: Int = 2000
-    @State private var dailyCount: Int = 0
-    
+        
     var body: some View {
         VStack {
             HStack {
@@ -132,9 +129,7 @@ struct ContentView: View {
                         .cornerRadius(10)
                     }
                 }
-                .onAppear{
-                    
-                }
+                
             }
             .padding()
             
@@ -175,6 +170,7 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
+            waterModel.setup(modelContext: modelContext)
             requestNotificationPermission()
             createNotificationActions()
             scheduleDailyNotifications(withAmount: 250)

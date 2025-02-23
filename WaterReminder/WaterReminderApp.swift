@@ -9,7 +9,7 @@ struct WaterReminderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(for: WaterProgress.self)
+                .modelContainer(for: [WaterProgress.self, AppSettings.self]) // Include all model types
         }
     }
 }
