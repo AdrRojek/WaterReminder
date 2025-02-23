@@ -14,7 +14,7 @@ class WaterProgress {
     }
 }
 
-class WatchModel: ObservableObject {
+class WaterModel: ObservableObject {
     @Published var waterProgresses: [WaterProgress] = []
     
         func addWaterProgress(_ progress: Double, maxProgress: Double = 4000) {

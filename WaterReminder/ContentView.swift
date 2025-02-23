@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import SwiftUIGIF
 
 struct ContentView: View {
     init() {
@@ -14,11 +15,20 @@ struct ContentView: View {
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
     @State private var boilerWater = 2000
+    @State private var dailyCount = 0
     
     var body: some View {
         
         VStack {
             HStack {
+                if dailyCount > 3 {
+                    GIFImage(name: "fire")
+                        .frame(width: 30, height: 100)
+                }
+                Text("\(dailyCount)")
+            }
+            .frame(height: 5)
+                HStack {
                 
               FilledDrop(progress: calculateTotalProgress())
                 VStack{
@@ -31,7 +41,6 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
-
                         } else {
                             Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
                                 .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
@@ -39,18 +48,15 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
-                            
                         }
 
                     }
                     .frame(width: 250, height: 20)
                     
-                    
                     Text("Powinieneś mieć: \(calculateHourWater())")
                         .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
                         )
                         .font(.custom("FONT_NAME", size: 10))
-                    
                 }
             }
             .padding()
@@ -66,6 +72,7 @@ struct ContentView: View {
                 Button("Dodaj") {
                     addOrUpdateWaterProgress(Double(water))
                     water = 0
+                    updateDailyCount()
                 }
                 .padding()
                 .background(Color.blue)
@@ -78,6 +85,7 @@ struct ContentView: View {
                 VStack{
                     Button("Wypito 250 ml") {
                         addOrUpdateWaterProgress(250)
+                        updateDailyCount()
                     }
                     .padding()
                     .background(Color.green)
@@ -86,6 +94,7 @@ struct ContentView: View {
                     
                     Button("Wypito 500 ml") {
                         addOrUpdateWaterProgress(500)
+                        updateDailyCount()
                     }
                     .padding()
                     .background(Color.orange)
@@ -98,13 +107,15 @@ struct ContentView: View {
                         Button("Bojler 250 ml"){
                                 addOrUpdateWaterProgress(250)
                                 boilerWater -= 250
+                                updateDailyCount()
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        Text("Stan bojlera \(boilerWater)")
+                        Text("Stan bojlera: \(boilerWater)")
+                            .font(.custom("FONT_NAME", size: 10))
                     }else{
                         Text("Uzupełnij bojler")
                         
@@ -195,16 +206,29 @@ struct ContentView: View {
                 }
                 .pickerStyle(WheelPickerStyle())
                 .frame(height: 150)
-                
-                Button("Zatwierdź") {
-                    subtractWaterProgress(Double(selectedAmount))
-                    showPopup = false
+                HStack{
+                    Button("Woda") {
+                        subtractWaterProgress(Double(selectedAmount))
+                        showPopup = false
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    if boilerWater != 2000{
+                        Button("Boiler") {
+                            boilerWater += selectedAmount
+                            if boilerWater > 2000 {boilerWater = 2000}
+                            subtractWaterProgress(Double(selectedAmount))
+                            showPopup = false
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
                 }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
                 Spacer()
                 
                 Button("Resetuj cały dzień"){
@@ -270,6 +294,28 @@ struct ContentView: View {
             let newEntry = WaterProgress(progress: amount, maxProgress: 4000)
             modelContext.insert(newEntry)
         }
+    }
+    
+    func updateDailyCount() {
+        let sortedEntries = waterProgresses.sorted(by: { $0.date > $1.date })
+        
+        var count = 0
+        var previousDate: Date?
+        
+        for entry in sortedEntries {
+            if entry.progress >= 4000 {
+                if let prevDate = previousDate, Calendar.current.isDate(prevDate, inSameDayAs: entry.date) == false {
+                    count += 1
+                } else if previousDate == nil {
+                    count += 1
+                }
+            } else {
+                break
+            }
+            previousDate = entry.date
+        }
+        
+        dailyCount = count
     }
     
     private func subtractWaterProgress(_ amount: Double) {
@@ -415,12 +461,8 @@ struct ContentView: View {
         
         return recommendedWater
     }
-
-    
     
 }
-
-
 
 struct FilledDrop: View {
     let progress: Double

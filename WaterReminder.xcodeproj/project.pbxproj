@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3A1F2A562D68E0390033E574 /* SwiftUIGIF in Frameworks */ = {isa = PBXBuildFile; productRef = 3A1F2A552D68E0390033E574 /* SwiftUIGIF */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3A6890242D6278E2000876CD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A1F2A562D68E0390033E574 /* SwiftUIGIF in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = WaterReminder;
 			packageProductDependencies = (
+				3A1F2A552D68E0390033E574 /* SwiftUIGIF */,
 			);
 			productName = WaterReminder;
 			productReference = 3A6890112D6278E1000876CD /* WaterReminder.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 3A6890082D6278E1000876CD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3A1F2A542D68E0390033E574 /* XCRemoteSwiftPackageReference "swiftui-gif" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3A6890122D6278E1000876CD /* Products */;
 			projectDirPath = "";
@@ -558,6 +567,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3A1F2A542D68E0390033E574 /* XCRemoteSwiftPackageReference "swiftui-gif" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/globulus/swiftui-gif";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3A1F2A552D68E0390033E574 /* SwiftUIGIF */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A1F2A542D68E0390033E574 /* XCRemoteSwiftPackageReference "swiftui-gif" */;
+			productName = SwiftUIGIF;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3A6890092D6278E1000876CD /* Project object */;
 }
