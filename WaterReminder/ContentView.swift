@@ -175,6 +175,7 @@ struct ContentView: View {
             requestNotificationPermission()
             createNotificationActions()
             initializeBoilerModel()
+            print("Boiler models count: \(boilerModels.count)")
             
             scheduleDailyNotifications(withAmount: 250)
             
@@ -377,16 +378,17 @@ struct ContentView: View {
     }
     
     private func initializeBoilerModel() {
-            if boilerModels.isEmpty {
-                let initialBoiler = BoilerModel(amount: 2000)
-                modelContext.insert(initialBoiler)
-                do {
-                    try modelContext.save()
-                } catch {
-                    print("Failed to initialize boiler model: \(error.localizedDescription)")
-                }
+        if boilerModels.isEmpty {
+            let initialBoiler = BoilerModel(amount: 2000)
+            modelContext.insert(initialBoiler)
+            do {
+                try modelContext.save()
+                print("Initial BoilerModel created successfully")
+            } catch {
+                print("Failed to initialize BoilerModel: \(error.localizedDescription)")
             }
         }
+    }
     
     private func printDatabaseContents() {
         for entry in waterProgresses {
