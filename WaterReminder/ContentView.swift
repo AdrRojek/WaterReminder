@@ -226,11 +226,29 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                     
-                    if boilerWater != 2000{
+                    if let boilerModel = boilerModels.first, boilerModel.amount != 2000 {
                         Button("Boiler") {
-                            boilerWater += selectedAmount
-                            if boilerWater > 2000 {boilerWater = 2000}
+                            let newAmount = boilerModel.amount + selectedAmount
+                            if newAmount <= 2000 && newAmount >= 0 {
+                                boilerModel.amount = newAmount
+                                do {
+                                    try modelContext.save()
+                                    print("Boiler water updated to \(boilerModel.amount) ml")
+                                } catch {
+                                    print("Failed to update boiler model: \(error.localizedDescription)")
+                                }
+                            }else if(newAmount > 2000){
+                                    boilerModel.amount = 2000
+                                do {
+                                    try modelContext.save()
+                                    print("Boiler water updated to \(boilerModel.amount) ml")
+                                } catch {
+                                    print("Failed to update boiler model: \(error.localizedDescription)")
+                                }
+                            }
+                            
                             subtractWaterProgress(Double(selectedAmount))
+                            
                             showPopup = false
                         }
                         .padding()
