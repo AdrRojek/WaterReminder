@@ -5,11 +5,13 @@ import UserNotifications
 @main
 struct WaterReminderApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    let container = try! ModelContainer(for: WaterProgress.self, AppSettings.self)
 
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(for: [WaterProgress.self, AppSettings.self]) // Include all model types
+                .modelContainer()
         }
     }
 }

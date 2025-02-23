@@ -4,19 +4,14 @@ import UserNotifications
 import SwiftUIGIF
 
 struct ContentView: View {
-    init(modelContext: ModelContext) {
-        _waterModel = StateObject(wrappedValue: WaterModel(modelContext: ModelContext(try! ModelContainer(for: WaterProgress.self))))
-        requestNotificationPermission()
-    }
-    
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
+    @StateObject private var waterModel: WaterModel
     
     @State private var water: Int = 0
     @State private var showPopup = false
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
-    @StateObject private var waterModel: WaterModel
         
     var body: some View {
         VStack {
@@ -101,32 +96,31 @@ struct ContentView: View {
                     .cornerRadius(10)
                 }
                 VStack {
-                    if boilerWater > 249 {
+                    if (waterModel.appSettings?.boilerWater ?? 2000) > 249 {
                         Button("Bojler 250 ml") {
                             addOrUpdateWaterProgress(250)
                             updateDailyCount()
-                            waterModel.updateBoilerWater(by: 250)
+                            waterModel.updateBoilerWater(by: 250) // Odejmujemy 250 od bojlera
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        if let settings = waterModel.appSettings {
-                                        Text("Stan bojlera: \(settings.boilerWater) ml")
-                                        .font(.custom("FONT_NAME", size: 10))
-                                    } else {
-                                        Text("Ładowanie...")
-                                    }
+                        Text("Stan bojlera: \(waterModel.appSettings?.boilerWater ?? 2000) ml")
+                            .font(.custom("FONT_NAME", size: 10))
                     } else {
-                        Text("Uzupełnij bojler")
-                        
-                        Button("Uzupełniony!") {
+                        VStack {
+                            Text("Uzupełnij bojler")
+                            
+                            Button("Uzupełniony!") {
+                                waterModel.updateBoilerWater(by: -2000) // Reset do pełnego stanu
+                            }
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                         }
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
                     }
                 }
                 
@@ -216,10 +210,10 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                     
-                    if boilerWater != 2000 {
+                    if (waterModel.appSettings?.boilerWater ?? 2000) < 2000 {
                         Button("Boiler") {
-                            boilerWater += selectedAmount
-                            if boilerWater > 2000 { boilerWater = 2000 }
+                            let amountToAdd = abs(selectedAmount)
+                            waterModel.updateBoilerWater(by: -amountToAdd) // Dodajemy wybraną ilość z powrotem
                             subtractWaterProgress(Double(selectedAmount))
                             showPopup = false
                         }
@@ -286,7 +280,7 @@ struct ContentView: View {
         }
     }
     
-    func updateDailyCount() {
+    private func updateDailyCount() {
         let sortedEntries = waterProgresses.sorted(by: { $0.date > $1.date })
         
         var count = 0
@@ -305,7 +299,8 @@ struct ContentView: View {
             previousDate = entry.date
         }
         
-        dailyCount = count
+        waterModel.appSettings?.dailyCount = count // Aktualizacja przez model
+        try? modelContext.save() // Zapisz zmiany
     }
     
     private func subtractWaterProgress(_ amount: Double) {
@@ -476,18 +471,20 @@ struct FilledDrop: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        do {
-            let schema = Schema([WaterProgress.self, AppSettings.self])
-            let previewContainer = try ModelContainer(for: schema) // Tworzymy tymczasową bazę danych
-
-            return ContentView(modelContext: previewContainer.mainContext)
-                .modelContainer(previewContainer)
-        } catch {
-            fatalError("Nie można utworzyć ModelContainer: \(error)")
-        }
-    }
+#Preview {
+    let config = ModelConfiguration(
+        schema: Schema([WaterProgress.self, AppSettings.self]),
+        isStoredInMemoryOnly: true
+    )
+    
+    let container = try! ModelContainer(for: WaterProgress.self, AppSettings.self, configurations: config)
+    
+    // Add sample data
+    let example = WaterProgress(progress: 1500, date: Date())
+    container.mainContext.insert(example)
+    
+     ContentView()
+        .modelContainer(container)
 }
 
 

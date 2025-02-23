@@ -108,9 +108,11 @@ class WaterModel: ObservableObject {
     }
     
     func updateBoilerWater(by amount: Int) {
-            appSettings?.boilerWater = (appSettings?.boilerWater ?? 2000) - amount
-            try? modelContext.save()
-        }
+        let currentValue = appSettings?.boilerWater ?? 2000
+        let newValue = max(0, min(currentValue - amount, 2000))
+        appSettings?.boilerWater = newValue
+        try? modelContext.save()
+    }
     
     func resetAppSettings() {
         appSettings = AppSettings()
