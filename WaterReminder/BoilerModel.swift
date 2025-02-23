@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-class BoilderModel {
+class BoilerModel {
     var amount: Int = 0
     
     init(amount: Int = 2000) {

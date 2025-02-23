@@ -9,6 +9,7 @@ struct ContentView: View {
         }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
+    @Query private var boilerModels: [BoilerModel]
     
     @State private var water: Int = 0
     @State private var showPopup = false
@@ -105,22 +106,23 @@ struct ContentView: View {
                     
                     if boilerWater > 249 {
                         Button("Bojler 250 ml"){
-                                addOrUpdateWaterProgress(250)
-                                boilerWater -= 250
+                            updateBoiler(-250)
                                 updateDailyCount()
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
+                        if let boilerModel = boilerModels.first {
+                            Text("Stan bojlera: \(boilerModel.amount)")
+                                .font(.custom("FONT_NAME", size: 10))
+                        }
                         
-                        Text("Stan bojlera: \(boilerWater)")
-                            .font(.custom("FONT_NAME", size: 10))
                     }else{
                         Text("Uzupełnij bojler")
                         
                         Button("Uzupełniony!"){
-                            boilerWater = 2000
+                            updateBoiler(2000)
                         }
                         .padding()
                         .background(Color.green)
@@ -173,6 +175,11 @@ struct ContentView: View {
             createNotificationActions()
             
             scheduleDailyNotifications(withAmount: 250)
+            
+            if boilerModels.isEmpty {
+                            let initialBoiler = BoilerModel(amount: 2000)
+                            modelContext.insert(initialBoiler)
+                        }
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
                             if let amount = notification.userInfo?["amount"] as? Double {
@@ -350,6 +357,20 @@ struct ContentView: View {
             }
         }
         return 0
+    }
+    
+    private func updateBoiler(_ amountChange: Int) {
+        if let boilerModel = boilerModels.first {
+            let newAmount = boilerModel.amount + amountChange
+            if newAmount >= 0 && newAmount <= 2000 {
+                boilerModel.amount = newAmount
+                do {
+                    try modelContext.save() // Use 'try' here since `save()` can throw an error
+                } catch {
+                    print("Failed to save boiler model: \(error.localizedDescription)") // Handle the error
+                }
+            }
+        }
     }
     
     private func printDatabaseContents() {
