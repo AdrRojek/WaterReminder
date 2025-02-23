@@ -107,12 +107,14 @@ struct ContentView: View {
                     if boilerWater > 249 {
                         Button("Bojler 250 ml"){
                             updateBoiler(-250)
-                                updateDailyCount()
+                            addOrUpdateWaterProgress(250)
+                            updateDailyCount()
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
+                        Text("blabla")
                         if let boilerModel = boilerModels.first {
                             Text("Stan bojlera: \(boilerModel.amount)")
                                 .font(.custom("FONT_NAME", size: 10))
