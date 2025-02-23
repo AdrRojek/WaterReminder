@@ -13,7 +13,7 @@ struct WelcomeScreen: View {
             let today = Calendar.current.startOfDay(for: Date())
             if waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) != nil {
                 
-                ContentView()
+                ContentView(modelContext: modelContext)
                 
             }else{
                 Button("Rozpocznij ten piękny dzień"){

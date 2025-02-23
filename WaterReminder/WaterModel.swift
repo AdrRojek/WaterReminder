@@ -25,11 +25,13 @@ class AppSettings {
     }
 }
 
-class WatchModel: ObservableObject {
+class WaterModel: ObservableObject {
     @Published var waterProgresses: [WaterProgress] = []
     @Published var appSettings: AppSettings?
+    private var modelContext: ModelContext
     
-    init() {
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
         loadAppSettings()
     }
     
@@ -46,11 +48,25 @@ class WatchModel: ObservableObject {
         updateDailyCount()
     }
     
-    private func loadAppSettings() {
-        if appSettings == nil {
-            appSettings = AppSettings()
-        }
+    func loadAppSettings() {
+        let request = FetchDescriptor<AppSettings>()
+                if let existingSettings = try? modelContext.fetch(request).first {
+                    appSettings = existingSettings
+                } else {
+                    let newSettings = AppSettings()
+                    modelContext.insert(newSettings)
+                    appSettings = newSettings
+                    saveAppSettings()
+                }
     }
+    
+    func saveAppSettings() {
+            do {
+                try modelContext.save()
+            } catch {
+                print("Błąd zapisu: \(error)")
+            }
+        }
     
     func updateDailyCount() {
         guard let settings = appSettings else { return }
@@ -73,12 +89,11 @@ class WatchModel: ObservableObject {
     }
     
     func updateBoilerWater(by amount: Int) {
-        guard var settings = appSettings else { return }
-        settings.boilerWater -= amount
-        if settings.boilerWater < 0 {
-            settings.boilerWater = 0
+            guard let settings = appSettings else { return }
+            settings.boilerWater -= amount
+            if settings.boilerWater < 0 { settings.boilerWater = 0 }
+            saveAppSettings()
         }
-    }
     
     func resetAppSettings() {
         appSettings = AppSettings()

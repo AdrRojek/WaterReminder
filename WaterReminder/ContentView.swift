@@ -4,7 +4,8 @@ import UserNotifications
 import SwiftUIGIF
 
 struct ContentView: View {
-    init() {
+    init(modelContext: ModelContext) {
+        _waterModel = StateObject(wrappedValue: WaterModel(modelContext: modelContext))
         requestNotificationPermission()
     }
     
@@ -15,7 +16,7 @@ struct ContentView: View {
     @State private var showPopup = false
     @State private var selectedAmount: Int = -50
     @State private var showResetPopup = false
-    @StateObject private var watchModel = WatchModel()
+    @StateObject private var waterModel: WaterModel
     
     @State private var boilerWater: Int = 2000
     @State private var dailyCount: Int = 0
@@ -23,11 +24,11 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                if let settings = watchModel.appSettings, settings.dailyCount > 3 {
+                if let settings = waterModel.appSettings, settings.dailyCount > 3 {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
-                if let settings = watchModel.appSettings {
+                if let settings = waterModel.appSettings {
                     Text("\(settings.dailyCount)")
                 }
             }
@@ -106,27 +107,33 @@ struct ContentView: View {
                     if boilerWater > 249 {
                         Button("Bojler 250 ml") {
                             addOrUpdateWaterProgress(250)
-                            boilerWater -= 250
                             updateDailyCount()
+                            waterModel.updateBoilerWater(by: 250)
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         
-                        Text("Stan bojlera: \(boilerWater)")
-                            .font(.custom("FONT_NAME", size: 10))
+                        if let settings = waterModel.appSettings {
+                                        Text("Stan bojlera: \(settings.boilerWater) ml")
+                                        .font(.custom("FONT_NAME", size: 10))
+                                    } else {
+                                        Text("Ładowanie...")
+                                    }
                     } else {
                         Text("Uzupełnij bojler")
                         
                         Button("Uzupełniony!") {
-                            boilerWater = 2000
                         }
                         .padding()
                         .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }
+                }
+                .onAppear{
+                    
                 }
             }
             .padding()
@@ -473,7 +480,19 @@ struct FilledDrop: View {
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: WaterProgress.self)
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        do {
+            let schema = Schema([WaterProgress.self, AppSettings.self])
+            let previewContainer = try ModelContainer(for: schema) // Tworzymy tymczasową bazę danych
+
+            return ContentView(modelContext: previewContainer.mainContext)
+                .modelContainer(previewContainer)
+        } catch {
+            fatalError("Nie można utworzyć ModelContainer: \(error)")
+        }
+    }
 }
+
+
+
