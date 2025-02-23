@@ -6,6 +6,7 @@ import SwiftUIGIF
 struct ContentView: View {
     init() {
             requestNotificationPermission()
+        initializeBoilerModel()
         }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
@@ -103,34 +104,32 @@ struct ContentView: View {
                     .cornerRadius(10)
                 }
                 VStack{
-                    
-                    if boilerWater > 249 {
-                        Button("Bojler 250 ml"){
+                    if let boilerModel = boilerModels.first, boilerModel.amount > 249 {
+                        Button("Bojler 250 ml") {
+                            print("Button 'Bojler 250 ml' clicked")
                             updateBoiler(-250)
                             addOrUpdateWaterProgress(250)
                             updateDailyCount()
+                            print("Boiler water updated to \(boilerModel.amount) ml")
                         }
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(10)
-                        Text("blabla")
-                        if let boilerModel = boilerModels.first {
-                            Text("Stan bojlera: \(boilerModel.amount)")
-                                .font(.custom("FONT_NAME", size: 10))
-                        }
                         
-                    }else{
+                        Text("Stan bojlera: \(boilerModel.amount) ml")
+                            .font(.custom("FONT_NAME", size: 10))
+                    } else {
                         Text("Uzupełnij bojler")
                         
-                        Button("Uzupełniony!"){
+                        Button("Uzupełniony!") {
                             updateBoiler(2000)
+                            print("Boiler water reset to 2000 ml")
                         }
                         .padding()
                         .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(10)
-                        
                     }
                 }
             }
@@ -175,6 +174,7 @@ struct ContentView: View {
         .onAppear{
             requestNotificationPermission()
             createNotificationActions()
+            initializeBoilerModel()
             
             scheduleDailyNotifications(withAmount: 250)
             
@@ -367,13 +367,26 @@ struct ContentView: View {
             if newAmount >= 0 && newAmount <= 2000 {
                 boilerModel.amount = newAmount
                 do {
-                    try modelContext.save() // Use 'try' here since `save()` can throw an error
+                    try modelContext.save()
+                    print("Boiler updated to \(boilerModel.amount) ml")
                 } catch {
-                    print("Failed to save boiler model: \(error.localizedDescription)") // Handle the error
+                    print("Failed to save boiler model: \(error.localizedDescription)")
                 }
             }
         }
     }
+    
+    private func initializeBoilerModel() {
+            if boilerModels.isEmpty {
+                let initialBoiler = BoilerModel(amount: 2000)
+                modelContext.insert(initialBoiler)
+                do {
+                    try modelContext.save()
+                } catch {
+                    print("Failed to initialize boiler model: \(error.localizedDescription)")
+                }
+            }
+        }
     
     private func printDatabaseContents() {
         for entry in waterProgresses {
@@ -447,13 +460,13 @@ struct ContentView: View {
                 trigger: trigger
             )
             
-            center.add(request) { error in
-                if let error = error {
-                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
-                } else {
-                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
-                }
-            }
+//            center.add(request) { error in
+//                if let error = error {
+//                    print("Błąd podczas dodawania powiadomienia: \(error.localizedDescription)")
+//                } else {
+//                    print("Powiadomienie zaplanowane na \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
+//                }
+//            }
             
             dateComponents.minute! += 50
             if dateComponents.minute! >= 60 {
@@ -513,5 +526,5 @@ struct FilledDrop: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: WaterProgress.self)
+        .modelContainer(for: [WaterProgress.self, BoilerModel.self])
 }
