@@ -230,6 +230,7 @@ struct ContentView: View {
                         Button("Boiler") {
                             let newAmount = boilerModel.amount + selectedAmount
                             if newAmount <= 2000 && newAmount >= 0 {
+                                subtractWaterProgress(Double(selectedAmount))
                                 boilerModel.amount = newAmount
                                 do {
                                     try modelContext.save()
@@ -238,6 +239,7 @@ struct ContentView: View {
                                     print("Failed to update boiler model: \(error.localizedDescription)")
                                 }
                             }else if(newAmount > 2000){
+                                    subtractWaterProgress(Double(2000-boilerModel.amount))
                                     boilerModel.amount = 2000
                                 do {
                                     try modelContext.save()
@@ -246,8 +248,6 @@ struct ContentView: View {
                                     print("Failed to update boiler model: \(error.localizedDescription)")
                                 }
                             }
-                            
-                            subtractWaterProgress(Double(selectedAmount))
                             
                             showPopup = false
                         }
