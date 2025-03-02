@@ -24,7 +24,7 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                if dailyCount > 3 {
+                if calculateStreak() > 3 {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
@@ -358,20 +358,20 @@ struct ContentView: View {
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = dailyCountModels.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            if calculateTotalProgress() >= 4000 {
-                existingEntry.done = true
-            } else {
-                existingEntry.done = false
-            }
+            existingEntry.done = calculateTotalProgress() >= 4000
         } else {
-            let newEntry = DailyCountModel(dailyCount: 0, date: today, done: calculateTotalProgress() >= 4000)
+            let newEntry = DailyCountModel(
+                dailyCount: 0,
+                date: today,
+                done: calculateTotalProgress() >= 4000
+            )
             modelContext.insert(newEntry)
         }
         
         do {
             try modelContext.save()
         } catch {
-            print("Failed to save daily count model: \(error.localizedDescription)")
+            print("Błąd zapisu: \(error.localizedDescription)")
         }
     }
     
@@ -379,19 +379,30 @@ struct ContentView: View {
         let sortedEntries = dailyCountModels.sorted(by: { $0.date > $1.date })
         
         var streak = 0
-        var previousDate = Calendar.current.startOfDay(for: Date())
+        let today = Calendar.current.startOfDay(for: Date())
+        var expectedDate = today
+        
+        if let todayEntry = sortedEntries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }), todayEntry.done {
+            streak += 1
+            expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+        } else {
+            expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+        }
         
         for entry in sortedEntries {
-            if Calendar.current.isDate(entry.date, inSameDayAs: previousDate) && entry.done {
-                streak += 1
-            } else {
-                break
+            let entryDate = Calendar.current.startOfDay(for: entry.date)
+            
+            guard entryDate < today else { continue }
+            
+            while entryDate < expectedDate {
+                return streak
             }
             
-            if let nextDate = Calendar.current.date(byAdding: .day, value: -1, to: previousDate) {
-                previousDate = Calendar.current.startOfDay(for: nextDate)
-            } else {
-                break
+            if Calendar.current.isDate(entryDate, inSameDayAs: expectedDate), entry.done {
+                streak += 1
+                expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+            } else if entryDate == expectedDate {
+                return streak
             }
         }
         
@@ -631,7 +642,6 @@ struct ContentView: View {
             }
         }
     }
-
     func scheduleWeeklyTuesdayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
