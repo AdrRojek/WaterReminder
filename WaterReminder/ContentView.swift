@@ -178,7 +178,13 @@ struct ContentView: View {
             initializeBoilerModel()
             print("Boiler models count: \(boilerModels.count)")
             
-            scheduleDailyNotifications(withAmount: 250)
+            scheduleWeeklyMondayNotifications()
+            scheduleWeeklyTuesdayNotifications()
+            scheduleWeeklyWednesdayNotifications()
+            scheduleWeeklyThursdayNotifications()
+            scheduleWeeklyFridayNotifications()
+            scheduleWeeklySaturdayNotifications()
+            scheduleWeeklySundayNotifications()
             
             if boilerModels.isEmpty {
                             let initialBoiler = BoilerModel(amount: 2000)
@@ -386,7 +392,6 @@ struct ContentView: View {
                 break
             }
             
-            // Przesuń datę o dzień wstecz
             if let nextDate = Calendar.current.date(byAdding: .day, value: -1, to: previousDate) {
                 previousDate = Calendar.current.startOfDay(for: nextDate)
             } else {
@@ -511,7 +516,7 @@ struct ContentView: View {
         
         let content = UNMutableNotificationContent()
         content.title = "Wypij szklankę wody"
-        content.body = "Do wypicia: \(amount) ml"
+        content.body = "Do wypicia: \(amount) ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
         content.sound = UNNotificationSound.default
         content.categoryIdentifier = "WATER_REMINDER"
         
@@ -572,6 +577,397 @@ struct ContentView: View {
         let recommendedWater = 250 * intervals
         
         return recommendedWater
+    }
+    
+    
+    func scheduleWeeklyMondayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 2
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "MONDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na poniedziałek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+
+    func scheduleWeeklyTuesdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 3
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "TUESDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Wtorek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyWednesdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 4
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "WEDNESDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Środe \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyThursdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 5 
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "THURSDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Czwartek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyFridayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            // Konfiguracja daty (każdy poniedziałek)
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 5 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "FRIDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Piątek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklySaturdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            // Konfiguracja daty (każdy poniedziałek)
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 7 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "SATURDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Sobote \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklySundayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+
+        let times = [
+            (10, 0),    // 10:00
+            (10, 50),   // 10:50
+            (11, 40),   // 11:40
+            (12, 30),   // 12:30
+            (13, 20),   // 13:20
+            (14, 10),   // 14:10
+            (15, 0),    // 15:00
+            (15, 50),   // 15:50
+            (16, 40),   // 16:40
+            (17, 30),   // 17:30
+            (18, 20),   // 18:20
+            (19, 10),   // 19:10
+            (20, 0),    // 20:00
+            (20, 50),   // 20:50
+            (21, 40),   // 21:40
+            (22, 30)    // 22:30
+        ]
+
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            // Konfiguracja daty (każdy poniedziałek)
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 1 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "SUNDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Niedziele \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
     }
     
 }
