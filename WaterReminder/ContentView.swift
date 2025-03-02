@@ -5,9 +5,9 @@ import SwiftUIGIF
 
 struct ContentView: View {
     init() {
-            requestNotificationPermission()
+        requestNotificationPermission()
         initializeBoilerModel()
-        }
+    }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     @Query private var boilerModels: [BoilerModel]
@@ -24,16 +24,16 @@ struct ContentView: View {
         
         VStack {
             HStack {
-                if dailyCount > 3 {
+                if calculateStreak() > 3 {
                     GIFImage(name: "fire")
                         .frame(width: 30, height: 100)
                 }
                 Text("\(calculateStreak())")
             }
             .frame(height: 5)
-                HStack {
+            HStack {
                 
-              FilledDrop(progress: calculateTotalProgress())
+                FilledDrop(progress: calculateTotalProgress())
                 VStack{
                     ProgressView(value: calculateTotalProgress(), total: 4000) {
                         if calculateTotalProgress() < 4000 {
@@ -52,7 +52,7 @@ struct ContentView: View {
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
                         }
-
+                        
                     }
                     .frame(width: 250, height: 20)
                     
@@ -178,18 +178,24 @@ struct ContentView: View {
             initializeBoilerModel()
             print("Boiler models count: \(boilerModels.count)")
             
-            scheduleDailyNotifications(withAmount: 250)
+            scheduleWeeklyMondayNotifications()
+            scheduleWeeklyTuesdayNotifications()
+            scheduleWeeklyWednesdayNotifications()
+            scheduleWeeklyThursdayNotifications()
+            scheduleWeeklyFridayNotifications()
+            scheduleWeeklySaturdayNotifications()
+            scheduleWeeklySundayNotifications()
             
             if boilerModels.isEmpty {
-                            let initialBoiler = BoilerModel(amount: 2000)
-                            modelContext.insert(initialBoiler)
-                        }
+                let initialBoiler = BoilerModel(amount: 2000)
+                modelContext.insert(initialBoiler)
+            }
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
-                            if let amount = notification.userInfo?["amount"] as? Double {
-                                addOrUpdateWaterProgress(amount)
-                            }
-                        }
+                if let amount = notification.userInfo?["amount"] as? Double {
+                    addOrUpdateWaterProgress(amount)
+                }
+            }
         }
         
         .sheet(isPresented: $showPopup) {
@@ -209,7 +215,7 @@ struct ContentView: View {
                     .padding()
                     .font(.system(size: 20))
                     .fontWeight(.bold)
-
+                
                 Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
                     ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
                         Text("\((value * -1)) ml")
@@ -240,8 +246,8 @@ struct ContentView: View {
                                     print("Failed to update boiler model: \(error.localizedDescription)")
                                 }
                             }else if(newAmount > 2000){
-                                    subtractWaterProgress(Double(2000-boilerModel.amount))
-                                    boilerModel.amount = 2000
+                                subtractWaterProgress(Double(2000-boilerModel.amount))
+                                boilerModel.amount = 2000
                                 do {
                                     try modelContext.save()
                                     print("Boiler water updated to \(boilerModel.amount) ml")
@@ -281,30 +287,30 @@ struct ContentView: View {
                 Text("Czy na pewno chcesz zresetować?")
                     .fontWeight(.bold)
                     .font(.system(size: 20))
-            
-            
-            HStack(spacing: 30){
                 
-                Button("Nie"){
-                    showResetPopup = false
-                    showPopup = true
+                
+                HStack(spacing: 30){
+                    
+                    Button("Nie"){
+                        showResetPopup = false
+                        showPopup = true
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    
+                    Button("Tak"){
+                        resetWater()
+                        showResetPopup = false
+                    }
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
                 }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                
-                Button("Tak"){
-                    resetWater()
-                    showResetPopup = false
-                }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-            }
             }
             .presentationDetents([.height(500)])
             .presentationDragIndicator(.visible)
@@ -351,25 +357,21 @@ struct ContentView: View {
     private func updateDailyCountModel() {
         let today = Calendar.current.startOfDay(for: Date())
         
-        // Sprawdź, czy istnieje rekord dla dzisiejszego dnia
         if let existingEntry = dailyCountModels.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            // Jeśli cel został osiągnięty, ustaw `done` na true
-            if calculateTotalProgress() >= 4000 {
-                existingEntry.done = true
-            } else {
-                existingEntry.done = false
-            }
+            existingEntry.done = calculateTotalProgress() >= 4000
         } else {
-            // Jeśli rekord nie istnieje, twóutwórz nowy
-            let newEntry = DailyCountModel(dailyCount: 0, date: today, done: calculateTotalProgress() >= 4000)
+            let newEntry = DailyCountModel(
+                dailyCount: 0,
+                date: today,
+                done: calculateTotalProgress() >= 4000
+            )
             modelContext.insert(newEntry)
         }
         
-        // Zapisz zmiany w bazie danych
         do {
             try modelContext.save()
         } catch {
-            print("Failed to save daily count model: \(error.localizedDescription)")
+            print("Błąd zapisu: \(error.localizedDescription)")
         }
     }
     
@@ -377,20 +379,30 @@ struct ContentView: View {
         let sortedEntries = dailyCountModels.sorted(by: { $0.date > $1.date })
         
         var streak = 0
-        var previousDate = Calendar.current.startOfDay(for: Date())
+        let today = Calendar.current.startOfDay(for: Date())
+        var expectedDate = today
+        
+        if let todayEntry = sortedEntries.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }), todayEntry.done {
+            streak += 1
+            expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+        } else {
+            expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+        }
         
         for entry in sortedEntries {
-            if Calendar.current.isDate(entry.date, inSameDayAs: previousDate) && entry.done {
-                streak += 1
-            } else {
-                break
+            let entryDate = Calendar.current.startOfDay(for: entry.date)
+            
+            guard entryDate < today else { continue }
+            
+            while entryDate < expectedDate {
+                return streak
             }
             
-            // Przesuń datę o dzień wstecz
-            if let nextDate = Calendar.current.date(byAdding: .day, value: -1, to: previousDate) {
-                previousDate = Calendar.current.startOfDay(for: nextDate)
-            } else {
-                break
+            if Calendar.current.isDate(entryDate, inSameDayAs: expectedDate), entry.done {
+                streak += 1
+                expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: expectedDate)!
+            } else if entryDate == expectedDate {
+                return streak
             }
         }
         
@@ -506,20 +518,20 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
-     func scheduleDailyNotifications(withAmount amount: Int) {
+    func scheduleDailyNotifications(withAmount amount: Int) {
         let center = UNUserNotificationCenter.current()
         
         let content = UNMutableNotificationContent()
         content.title = "Wypij szklankę wody"
-        content.body = "Do wypicia: \(amount) ml"
+        content.body = "Do wypicia: \(amount) ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
         content.sound = UNNotificationSound.default
         content.categoryIdentifier = "WATER_REMINDER"
         
         if let imageURL = Bundle.main.url(forResource: "water", withExtension: "png"),
-            let attachment = try? UNNotificationAttachment(identifier: "waterIcon", url: imageURL, options: nil) {
+           let attachment = try? UNNotificationAttachment(identifier: "waterIcon", url: imageURL, options: nil) {
             content.attachments = [attachment]
         }
-         
+        
         let calendar = Calendar.current
         let now = Date()
         
@@ -572,6 +584,393 @@ struct ContentView: View {
         let recommendedWater = 250 * intervals
         
         return recommendedWater
+    }
+    
+    
+    func scheduleWeeklyMondayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 2
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "MONDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na poniedziałek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyTuesdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 3
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "TUESDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Wtorek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyWednesdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 4
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "WEDNESDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Środe \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyThursdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 5
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "THURSDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Czwartek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklyFridayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 5
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "FRIDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Piątek \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklySaturdayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 7
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "SATURDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Sobote \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
+    }
+    func scheduleWeeklySundayNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        let times = [
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
+        ]
+        
+        for (hour, minute) in times {
+            let content = UNMutableNotificationContent()
+            content.title = "Wypij szklankę wody"
+            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.sound = .default
+            content.categoryIdentifier = "WATER_REMINDER"
+            
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 1
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: dateComponents,
+                repeats: true
+            )
+            
+            let request = UNNotificationRequest(
+                identifier: "SUNDAY_\(hour)_\(minute)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("Błąd dla \(hour):\(minute): \(error.localizedDescription)")
+                } else {
+                    print("Zaplanowano na Niedziele \(hour):\(String(format: "%02d", minute))")
+                }
+            }
+        }
     }
     
 }
