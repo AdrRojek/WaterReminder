@@ -5,9 +5,9 @@ import SwiftUIGIF
 
 struct ContentView: View {
     init() {
-            requestNotificationPermission()
+        requestNotificationPermission()
         initializeBoilerModel()
-        }
+    }
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
     @Query private var boilerModels: [BoilerModel]
@@ -31,9 +31,9 @@ struct ContentView: View {
                 Text("\(calculateStreak())")
             }
             .frame(height: 5)
-                HStack {
+            HStack {
                 
-              FilledDrop(progress: calculateTotalProgress())
+                FilledDrop(progress: calculateTotalProgress())
                 VStack{
                     ProgressView(value: calculateTotalProgress(), total: 4000) {
                         if calculateTotalProgress() < 4000 {
@@ -52,7 +52,7 @@ struct ContentView: View {
                                 .font(.custom("FONT_NAME", size: 22))
                                 .fontWeight(.bold)
                         }
-
+                        
                     }
                     .frame(width: 250, height: 20)
                     
@@ -187,15 +187,15 @@ struct ContentView: View {
             scheduleWeeklySundayNotifications()
             
             if boilerModels.isEmpty {
-                            let initialBoiler = BoilerModel(amount: 2000)
-                            modelContext.insert(initialBoiler)
-                        }
+                let initialBoiler = BoilerModel(amount: 2000)
+                modelContext.insert(initialBoiler)
+            }
             
             NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
-                            if let amount = notification.userInfo?["amount"] as? Double {
-                                addOrUpdateWaterProgress(amount)
-                            }
-                        }
+                if let amount = notification.userInfo?["amount"] as? Double {
+                    addOrUpdateWaterProgress(amount)
+                }
+            }
         }
         
         .sheet(isPresented: $showPopup) {
@@ -215,7 +215,7 @@ struct ContentView: View {
                     .padding()
                     .font(.system(size: 20))
                     .fontWeight(.bold)
-
+                
                 Picker("Ile chcesz odjąć?", selection: $selectedAmount) {
                     ForEach(Array(stride(from: 0, through: 1000, by: 50)), id: \.self) { value in
                         Text("\((value * -1)) ml")
@@ -246,8 +246,8 @@ struct ContentView: View {
                                     print("Failed to update boiler model: \(error.localizedDescription)")
                                 }
                             }else if(newAmount > 2000){
-                                    subtractWaterProgress(Double(2000-boilerModel.amount))
-                                    boilerModel.amount = 2000
+                                subtractWaterProgress(Double(2000-boilerModel.amount))
+                                boilerModel.amount = 2000
                                 do {
                                     try modelContext.save()
                                     print("Boiler water updated to \(boilerModel.amount) ml")
@@ -287,30 +287,30 @@ struct ContentView: View {
                 Text("Czy na pewno chcesz zresetować?")
                     .fontWeight(.bold)
                     .font(.system(size: 20))
-            
-            
-            HStack(spacing: 30){
                 
-                Button("Nie"){
-                    showResetPopup = false
-                    showPopup = true
+                
+                HStack(spacing: 30){
+                    
+                    Button("Nie"){
+                        showResetPopup = false
+                        showPopup = true
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    
+                    Button("Tak"){
+                        resetWater()
+                        showResetPopup = false
+                    }
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
                 }
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                
-                Button("Tak"){
-                    resetWater()
-                    showResetPopup = false
-                }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-            }
             }
             .presentationDetents([.height(500)])
             .presentationDragIndicator(.visible)
@@ -518,7 +518,7 @@ struct ContentView: View {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
     
-     func scheduleDailyNotifications(withAmount amount: Int) {
+    func scheduleDailyNotifications(withAmount amount: Int) {
         let center = UNUserNotificationCenter.current()
         
         let content = UNMutableNotificationContent()
@@ -528,10 +528,10 @@ struct ContentView: View {
         content.categoryIdentifier = "WATER_REMINDER"
         
         if let imageURL = Bundle.main.url(forResource: "water", withExtension: "png"),
-            let attachment = try? UNNotificationAttachment(identifier: "waterIcon", url: imageURL, options: nil) {
+           let attachment = try? UNNotificationAttachment(identifier: "waterIcon", url: imageURL, options: nil) {
             content.attachments = [attachment]
         }
-         
+        
         let calendar = Calendar.current
         let now = Date()
         
@@ -590,7 +590,7 @@ struct ContentView: View {
     func scheduleWeeklyMondayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -609,7 +609,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -645,7 +645,7 @@ struct ContentView: View {
     func scheduleWeeklyTuesdayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -664,7 +664,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -700,7 +700,7 @@ struct ContentView: View {
     func scheduleWeeklyWednesdayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -719,7 +719,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -755,7 +755,7 @@ struct ContentView: View {
     func scheduleWeeklyThursdayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -774,7 +774,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -810,7 +810,7 @@ struct ContentView: View {
     func scheduleWeeklyFridayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -829,7 +829,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -865,7 +865,7 @@ struct ContentView: View {
     func scheduleWeeklySaturdayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -884,7 +884,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -920,7 +920,7 @@ struct ContentView: View {
     func scheduleWeeklySundayNotifications() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-
+        
         let times = [
             (10, 0),
             (10, 50),
@@ -939,7 +939,7 @@ struct ContentView: View {
             (21, 40),
             (22, 00)
         ]
-
+        
         for (hour, minute) in times {
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"

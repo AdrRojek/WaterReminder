@@ -6,8 +6,8 @@ struct WelcomeScreen: View {
     
     @Environment(\.modelContext) private var modelContext
     @Query private var waterProgresses: [WaterProgress]
-
-
+    
+    
     var body: some View {
         VStack {
             let today = Calendar.current.startOfDay(for: Date())
@@ -25,9 +25,9 @@ struct WelcomeScreen: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-                
-            }
+            
         }
+    }
 }
 
 #Preview {

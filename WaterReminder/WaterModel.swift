@@ -17,7 +17,7 @@ class WaterProgress {
 class WaterModel: ObservableObject {
     @Published var waterProgresses: [WaterProgress] = []
     
-        func addWaterProgress(_ progress: Double, maxProgress: Double = 4000) {
+    func addWaterProgress(_ progress: Double, maxProgress: Double = 4000) {
         let newProgress = WaterProgress(progress: progress, maxProgress: maxProgress)
         waterProgresses.append(newProgress)
     }
