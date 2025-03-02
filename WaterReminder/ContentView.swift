@@ -357,21 +357,17 @@ struct ContentView: View {
     private func updateDailyCountModel() {
         let today = Calendar.current.startOfDay(for: Date())
         
-        // Sprawdź, czy istnieje rekord dla dzisiejszego dnia
         if let existingEntry = dailyCountModels.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            // Jeśli cel został osiągnięty, ustaw `done` na true
             if calculateTotalProgress() >= 4000 {
                 existingEntry.done = true
             } else {
                 existingEntry.done = false
             }
         } else {
-            // Jeśli rekord nie istnieje, twóutwórz nowy
             let newEntry = DailyCountModel(dailyCount: 0, date: today, done: calculateTotalProgress() >= 4000)
             modelContext.insert(newEntry)
         }
         
-        // Zapisz zmiany w bazie danych
         do {
             try modelContext.save()
         } catch {
@@ -582,25 +578,25 @@ struct ContentView: View {
     
     func scheduleWeeklyMondayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -638,25 +634,25 @@ struct ContentView: View {
 
     func scheduleWeeklyTuesdayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -693,25 +689,25 @@ struct ContentView: View {
     }
     func scheduleWeeklyWednesdayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -748,25 +744,25 @@ struct ContentView: View {
     }
     func scheduleWeeklyThursdayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -777,7 +773,7 @@ struct ContentView: View {
             content.categoryIdentifier = "WATER_REMINDER"
             
             var dateComponents = DateComponents()
-            dateComponents.weekday = 5 
+            dateComponents.weekday = 5
             dateComponents.hour = hour
             dateComponents.minute = minute
             
@@ -803,25 +799,25 @@ struct ContentView: View {
     }
     func scheduleWeeklyFridayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -831,9 +827,8 @@ struct ContentView: View {
             content.sound = .default
             content.categoryIdentifier = "WATER_REMINDER"
             
-            // Konfiguracja daty (każdy poniedziałek)
             var dateComponents = DateComponents()
-            dateComponents.weekday = 5 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.weekday = 5
             dateComponents.hour = hour
             dateComponents.minute = minute
             
@@ -859,25 +854,25 @@ struct ContentView: View {
     }
     func scheduleWeeklySaturdayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -887,9 +882,8 @@ struct ContentView: View {
             content.sound = .default
             content.categoryIdentifier = "WATER_REMINDER"
             
-            // Konfiguracja daty (każdy poniedziałek)
             var dateComponents = DateComponents()
-            dateComponents.weekday = 7 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.weekday = 7
             dateComponents.hour = hour
             dateComponents.minute = minute
             
@@ -915,25 +909,25 @@ struct ContentView: View {
     }
     func scheduleWeeklySundayNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń stare powiadomienia
+        center.removeAllPendingNotificationRequests()
 
         let times = [
-            (10, 0),    // 10:00
-            (10, 50),   // 10:50
-            (11, 40),   // 11:40
-            (12, 30),   // 12:30
-            (13, 20),   // 13:20
-            (14, 10),   // 14:10
-            (15, 0),    // 15:00
-            (15, 50),   // 15:50
-            (16, 40),   // 16:40
-            (17, 30),   // 17:30
-            (18, 20),   // 18:20
-            (19, 10),   // 19:10
-            (20, 0),    // 20:00
-            (20, 50),   // 20:50
-            (21, 40),   // 21:40
-            (22, 30)    // 22:30
+            (10, 0),
+            (10, 50),
+            (11, 40),
+            (12, 30),
+            (13, 20),
+            (14, 10),
+            (15, 0),
+            (15, 50),
+            (16, 40),
+            (17, 30),
+            (18, 20),
+            (19, 10),
+            (20, 0),
+            (20, 50),
+            (21, 40),
+            (22, 00)
         ]
 
         for (hour, minute) in times {
@@ -943,9 +937,8 @@ struct ContentView: View {
             content.sound = .default
             content.categoryIdentifier = "WATER_REMINDER"
             
-            // Konfiguracja daty (każdy poniedziałek)
             var dateComponents = DateComponents()
-            dateComponents.weekday = 1 // 1 = niedziela, 2 = poniedziałek
+            dateComponents.weekday = 1
             dateComponents.hour = hour
             dateComponents.minute = minute
             
