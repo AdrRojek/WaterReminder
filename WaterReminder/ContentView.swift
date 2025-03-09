@@ -178,13 +178,7 @@ struct ContentView: View {
             initializeBoilerModel()
             print("Boiler models count: \(boilerModels.count)")
             
-            scheduleWeeklyMondayNotifications()
-            scheduleWeeklyTuesdayNotifications()
-            scheduleWeeklyWednesdayNotifications()
-            scheduleWeeklyThursdayNotifications()
-            scheduleWeeklyFridayNotifications()
-            scheduleWeeklySaturdayNotifications()
-            scheduleWeeklySundayNotifications()
+            scheduleAllWeeklyNotifications()
             
             if boilerModels.isEmpty {
                 let initialBoiler = BoilerModel(amount: 2000)
@@ -971,6 +965,19 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    func scheduleAllWeeklyNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        
+        scheduleWeeklyMondayNotifications()
+        scheduleWeeklyTuesdayNotifications()
+        scheduleWeeklyWednesdayNotifications()
+        scheduleWeeklyThursdayNotifications()
+        scheduleWeeklyFridayNotifications()
+        scheduleWeeklySaturdayNotifications()
+        scheduleWeeklySundayNotifications()
     }
     
 }
