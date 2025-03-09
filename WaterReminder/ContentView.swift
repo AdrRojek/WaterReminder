@@ -969,7 +969,7 @@ struct ContentView: View {
     
     func scheduleAllWeeklyNotifications() {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests() // Usuń wszystkie powiadomienia tylko raz
+        center.removeAllPendingNotificationRequests()
         
         scheduleWeeklyMondayNotifications()
         scheduleWeeklyTuesdayNotifications()
