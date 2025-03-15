@@ -620,7 +620,7 @@ struct ContentView: View {
             
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
-            content.body = "Do wypicia: 250 ml | Do tej pory: \(Int(calculateTotalProgress())) ml"
+            content.body = "Do wypicia: 250 ml | Powinieneś już wypić: \(250 * (times.firstIndex(where: { $0 == (hour, minute) })! + 1)) ml"
             content.sound = .default
             content.categoryIdentifier = "WATER_REMINDER"
             
