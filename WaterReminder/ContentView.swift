@@ -573,7 +573,19 @@ struct ContentView: View {
         let calendar = Calendar.current
         let now = Date()
         
-        var resetDateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        // Planuj powiadomienia na dziś
+        var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        
+        // Planuj powiadomienia na jutro jeśli jest po 22:33
+        let lastNotificationTime = calendar.date(bySettingHour: 22, minute: 33, second: 0, of: now)!
+        let shouldPlanForTomorrow = now > lastNotificationTime
+        
+        if shouldPlanForTomorrow {
+            todayComponents.day! += 1
+        }
+        
+        // Ustaw reset na następny dzień po zaplanowanych powiadomieniach
+        var resetDateComponents = todayComponents
         resetDateComponents.day! += 1
         resetDateComponents.hour = 0
         resetDateComponents.minute = 0
@@ -602,14 +614,9 @@ struct ContentView: View {
         }
         
         for (hour, minute) in times {
-            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            var dateComponents = todayComponents
             dateComponents.hour = hour
             dateComponents.minute = minute
-            
-            let notificationDate = calendar.date(from: dateComponents)!
-            if notificationDate <= now {
-                continue
-            }
             
             let content = UNMutableNotificationContent()
             content.title = "Wypij szklankę wody"
@@ -631,13 +638,14 @@ struct ContentView: View {
             do {
                 try await center.add(request)
                 addedNotifications += 1
+                print("Zaplanowano powiadomienie na \(hour):\(minute)")
             } catch {
                 print("Błąd podczas dodawania powiadomienia dla \(hour):\(minute) - \(error.localizedDescription)")
             }
         }
         
         print("\nZakończono planowanie powiadomień.")
-        print("Zaplanowano \(addedNotifications) powiadomień na dziś")
+        print("Zaplanowano \(addedNotifications) powiadomień na \(shouldPlanForTomorrow ? "jutro" : "dziś")")
         
         let requests = await center.pendingNotificationRequests()
         print("\nLista wszystkich zaplanowanych powiadomień:")
