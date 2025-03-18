@@ -192,12 +192,6 @@ struct ContentView: View {
                         addOrUpdateWaterProgress(amount)
                     }
                 }
-//                UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-//                    for request in requests {
-//                        print("ZAPLANOWANE: \(request.identifier), \(request.trigger.debugDescription)")
-//                    }
-//                }
-                
             }
             
             .sheet(isPresented: $showPopup) {
@@ -564,7 +558,7 @@ struct ContentView: View {
         let times = [
             (10, 0), (10, 50), (11, 40), (12, 30), (13, 20), (14, 10),
             (15, 0), (15, 50), (16, 40), (17, 30), (18, 20), (19, 10),
-            (20, 0), (20, 50), (21, 40), (22, 00)
+            (20, 0), (20, 50), (21, 40), (22, 33)
         ]
         
         print("\nRozpoczynam planowanie powiadomień na dziś...")
@@ -573,10 +567,8 @@ struct ContentView: View {
         let calendar = Calendar.current
         let now = Date()
         
-        // Planuj powiadomienia na dziś
         var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
         
-        // Planuj powiadomienia na jutro jeśli jest po 22:33
         let lastNotificationTime = calendar.date(bySettingHour: 22, minute: 33, second: 0, of: now)!
         let shouldPlanForTomorrow = now > lastNotificationTime
         
@@ -584,7 +576,6 @@ struct ContentView: View {
             todayComponents.day! += 1
         }
         
-        // Ustaw reset na następny dzień po zaplanowanych powiadomieniach
         var resetDateComponents = todayComponents
         resetDateComponents.day! += 1
         resetDateComponents.hour = 0
@@ -693,7 +684,6 @@ struct FilledDrop: View {
         }
     }
 }
-
 
 #Preview {
     ContentView()
