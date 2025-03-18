@@ -1,10 +1,3 @@
-//
-//  Item.swift
-//  WaterReminder
-//
-//  Created by adrian on 16/02/2025.
-//
-
 import Foundation
 import SwiftData
 
