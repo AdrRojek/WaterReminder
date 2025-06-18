@@ -19,6 +19,13 @@ struct ContentView: View {
     @State private var showResetPopup = false
     @State private var boilerWater = 2000
     @State private var dailyCount = 0
+    @State private var showPastDayPopup = false
+    @State private var selectedPastDate = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+    @State private var pastDayAmount = 250
+    @State private var isPastDayBoiler = false
+    @State private var isYesterdaySelected = false
+    @State private var currentTime = Date()
+    @State private var updateTimer: Timer?
     
     var body: some View {
         NavigationView {
@@ -33,20 +40,20 @@ struct ContentView: View {
                 .frame(height: 5)
                 HStack {
                     
-                    FilledDrop(progress: calculateTotalProgress())
+                    FilledDrop(progress: calculateDynamicProgress())
                     VStack{
-                        ProgressView(value: calculateTotalProgress(), total: 4000) {
-                            if calculateTotalProgress() < 4000 {
-                                Text("Jeszcze \(Int(4000 - calculateTotalProgress())) ml")
-                                    .foregroundStyle(calculateTotalProgress()<2000 ? .red :
-                                                        (calculateTotalProgress()<4000 || calculateTotalProgress()>1500) ? .yellow : .white)
+                        ProgressView(value: calculateDynamicProgress(), total: 4000) {
+                            if calculateDynamicProgress() < 4000 {
+                                Text("Jeszcze \(Int(4000 - calculateDynamicProgress())) ml")
+                                    .foregroundStyle(calculateDynamicProgress()<2000 ? .red :
+                                                        (calculateDynamicProgress()<4000 || calculateDynamicProgress()>1500) ? .yellow : .white)
                                     .multilineTextAlignment(.center)
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .font(.custom("FONT_NAME", size: 22))
                                     .fontWeight(.bold)
                             } else {
-                                Text("Wypiłeś już \(Int(calculateTotalProgress())) ml")
-                                    .foregroundStyle(calculateTotalProgress() >= 4000 ? .green : .white)
+                                Text("Wypiłeś już \(Int(calculateDynamicProgress())) ml")
+                                    .foregroundStyle(calculateDynamicProgress() >= 4000 ? .green : .white)
                                     .multilineTextAlignment(.center)
                                     .frame(maxWidth: .infinity, alignment: .center)
                                     .font(.custom("FONT_NAME", size: 22))
@@ -57,7 +64,7 @@ struct ContentView: View {
                         .frame(width: 250, height: 20)
                         
                         Text("Powinieneś mieć: \(calculateHourWater())")
-                            .foregroundStyle(calculateHourWater() - Int(calculateTotalProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateTotalProgress()) > 0  ? .yellow : .green)
+                            .foregroundStyle(calculateHourWater() - Int(calculateDynamicProgress()) > 1000  ? .red : (calculateHourWater() - Int(calculateDynamicProgress()) > 0  ? .yellow : .green)
                             )
                             .font(.custom("FONT_NAME", size: 10))
                     }
@@ -105,32 +112,37 @@ struct ContentView: View {
                         .cornerRadius(10)
                     }
                     VStack{
-                        if let boilerModel = boilerModels.first, boilerModel.amount > 249 {
-                            Button("Bojler 250 ml") {
-                                print("Button 'Bojler 250 ml' clicked")
-                                updateBoiler(-250)
-                                addOrUpdateWaterProgress(250)
-                                updateDailyCount()
-                                print("Boiler water updated to \(boilerModel.amount) ml")
-                            }
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                        if let boilerModel = boilerModels.first {
+                            // Debug log
+                            let _ = print("DEBUG: Boiler amount: \(boilerModel.amount) ml")
                             
-                            Text("Stan bojlera: \(boilerModel.amount) ml")
-                                .font(.custom("FONT_NAME", size: 10))
-                        } else {
-                            Text("Uzupełnij bojler")
-                            
-                            Button("Uzupełniony!") {
-                                updateBoiler(2000)
-                                print("Boiler water reset to 2000 ml")
+                            if boilerModel.amount > 249 {
+                                Button("Bojler 250 ml") {
+                                    print("Button 'Bojler 250 ml' clicked")
+                                    updateBoiler(-250)
+                                    addOrUpdateWaterProgress(250)
+                                    updateDailyCount()
+                                    print("Boiler water updated to \(boilerModel.amount) ml")
+                                }
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                
+                                Text("Stan bojlera: \(boilerModel.amount) ml")
+                                    .font(.custom("FONT_NAME", size: 10))
+                            } else {
+                                Text("Uzupełnij bojler")
+                                
+                                Button("Uzupełniony!") {
+                                    updateBoiler(2000)
+                                    print("Boiler water reset to 2000 ml")
+                                }
+                                .padding()
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
                             }
-                            .padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
                         }
                     }
                 }
@@ -162,14 +174,33 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Button("Jednak nie wypiłem") {
-                    selectedAmount = -50
-                    showPopup = true
+                HStack {
+                    Spacer()
+                    
+                    Button("Jednak nie wypiłem") {
+                        selectedAmount = -50
+                        showPopup = true
+                    }
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        showPastDayPopup = true
+                    }) {
+                        HStack {
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.system(size: 16))
+                        }
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundStyle(.white)
+                    .cornerRadius(10)
                 }
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
             }
             .padding()
             .onAppear{
@@ -186,12 +217,55 @@ struct ContentView: View {
                     let initialBoiler = BoilerModel(amount: 2000)
                     modelContext.insert(initialBoiler)
                 }
-                
+                updateDailyCount()
                 NotificationCenter.default.addObserver(forName: NSNotification.Name("ADD_WATER"), object: nil, queue: .main) { notification in
                     if let amount = notification.userInfo?["amount"] as? Double {
                         addOrUpdateWaterProgress(amount)
                     }
                 }
+                
+                // Uruchom dynamiczną aktualizację
+                startDynamicUpdate()
+                
+//                    let calendar = Calendar.current
+//                    guard let targetDate = calendar.date(from: DateComponents(year: 2025, month: 6, day: 16)) else { return }
+//
+//                    // Znajdź WaterProgress dla 24.05
+//                    if let entry = waterProgresses.first(where: { calendar.isDate($0.date, inSameDayAs: targetDate) }) {
+//                        entry.progress = 4500
+//                        print("💧 Zmieniono ilość na 4300 ml dla WaterProgress z 24.05")
+//                    } else {
+//                        print("❌ Nie znaleziono wpisu WaterProgress z 24.05")
+//                    }
+//
+//                    // Znajdź (lub dodaj) DailyCountModel dla 24.05
+//                    if let dayEntry = dailyCountModels.first(where: { calendar.isDate($0.date, inSameDayAs: targetDate) }) {
+//                        dayEntry.done = true
+//                        print("✅ Ustawiono done = true dla DailyCountModel z 24.05")
+//                    } else {
+//                        let newEntry = DailyCountModel(dailyCount: 0, date: targetDate, done: true)
+//                        modelContext.insert(newEntry)
+//                        print("➕ Dodano DailyCountModel z done = true dla 24.05")
+//                    }
+//
+//                    // Zapisz zmiany
+//                    do {
+//                        try modelContext.save()
+//                        print("💾 Zmiany zapisane pomyślnie.")
+//                    } catch {
+//                        print("❌ Błąd zapisu: \(error.localizedDescription)")
+//                    }
+
+
+                
+            }
+            .onDisappear {
+                // Zatrzymaj timer gdy aplikacja znika
+                stopDynamicUpdate()
+            }
+            .onChange(of: currentTime) { _, _ in
+                // Sprawdź czy to nowy dzień
+                checkAndResetForNewDay()
             }
             
             .sheet(isPresented: $showPopup) {
@@ -310,6 +384,136 @@ struct ContentView: View {
                 .presentationDetents([.height(500)])
                 .presentationDragIndicator(.visible)
             }
+            .popover(isPresented: $showPastDayPopup) {
+                VStack(spacing: 20) {
+                    Text("Dodaj wodę do poprzedniego dnia")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
+                    
+                    DatePicker("Wybierz datę", selection: $selectedPastDate, in: ...Calendar.current.date(byAdding: .day, value: -1, to: Date())!, displayedComponents: .date)
+                        .datePickerStyle(CompactDatePickerStyle())
+                        .padding()
+                        .onChange(of: selectedPastDate) { _, newDate in
+                            let calendar = Calendar.current
+                            let yesterday = calendar.date(byAdding: .day, value: -1, to: Date())!
+                            isYesterdaySelected = calendar.isDate(newDate, inSameDayAs: yesterday)
+                            
+                            // Jeśli wybrano inny dzień niż wczoraj, resetuj wybór bojlera
+                            if !isYesterdaySelected {
+                                isPastDayBoiler = false
+                            }
+                        }
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Ilość wody (ml):")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Picker("Ilość wody", selection: $pastDayAmount) {
+                            ForEach(Array(stride(from: 50, through: 1000, by: 50)), id: \.self) { value in
+                                Text("\(value) ml")
+                            }
+                        }
+                        .pickerStyle(WheelPickerStyle())
+                        .frame(height: 120)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Źródło wody:")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        if isYesterdaySelected {
+                            HStack {
+                                Button(action: {
+                                    isPastDayBoiler = false
+                                }) {
+                                    HStack {
+                                        Image(systemName: isPastDayBoiler ? "circle" : "checkmark.circle.fill")
+                                            .foregroundColor(isPastDayBoiler ? .gray : .blue)
+                                        Text("Woda")
+                                    }
+                                    .padding()
+                                    .background(isPastDayBoiler ? Color.gray.opacity(0.2) : Color.blue.opacity(0.2))
+                                    .cornerRadius(8)
+                                }
+                                
+                                Button(action: {
+                                    isPastDayBoiler = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: isPastDayBoiler ? "checkmark.circle.fill" : "circle")
+                                            .foregroundColor(isPastDayBoiler ? .blue : .gray)
+                                        Text("Boiler")
+                                    }
+                                    .padding()
+                                    .background(isPastDayBoiler ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
+                                    .cornerRadius(8)
+                                }
+                            }
+                            
+                            if isPastDayBoiler {
+                                Text("💡 Boiler działa tylko dla wczorajszego dnia")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .padding(.top, 5)
+                            }
+                        } else {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("Woda")
+                            }
+                            .padding()
+                            .background(Color.blue.opacity(0.2))
+                            .cornerRadius(8)
+                            
+                            Text("💡 Dla starszych dni dostępna jest tylko opcja 'Woda'")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .padding(.top, 5)
+                        }
+                    }
+                    
+                    HStack(spacing: 20) {
+                        Button("Anuluj") {
+                            showPastDayPopup = false
+                        }
+                        .padding()
+                        .background(Color.gray)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
+                        Button("Dodaj") {
+                            addWaterToPastDay()
+                            showPastDayPopup = false
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                }
+                .padding()
+                .presentationDetents([.height(600)])
+                .presentationDragIndicator(.visible)
+                .onAppear {
+                    // Inicjalizacja przy pierwszym otwarciu popovera
+                    let calendar = Calendar.current
+                    let yesterday = calendar.date(byAdding: .day, value: -1, to: Date())!
+                    isYesterdaySelected = calendar.isDate(selectedPastDate, inSameDayAs: yesterday)
+                    
+                    print("DEBUG POPOVER: selectedPastDate = \(selectedPastDate)")
+                    print("DEBUG POPOVER: yesterday = \(yesterday)")
+                    print("DEBUG POPOVER: isYesterdaySelected = \(isYesterdaySelected)")
+                    
+                    // Jeśli wybrano inny dzień niż wczoraj, resetuj wybór bojlera
+                    if !isYesterdaySelected {
+                        isPastDayBoiler = false
+                    }
+                }
+            }
             .padding()
         }
     }
@@ -352,12 +556,12 @@ struct ContentView: View {
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = dailyCountModels.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            existingEntry.done = calculateTotalProgress() >= 4000
+            existingEntry.done = calculateDynamicProgress() >= 4000
         } else {
             let newEntry = DailyCountModel(
                 dailyCount: 0,
                 date: today,
-                done: calculateTotalProgress() >= 4000
+                done: calculateDynamicProgress() >= 4000
             )
             modelContext.insert(newEntry)
         }
@@ -424,15 +628,11 @@ struct ContentView: View {
         }
     }
     
-    private func calculateTotalProgress() -> Double {
+    private func calculateDynamicProgress() -> Double {
         let today = Calendar.current.startOfDay(for: Date())
         
         if let existingEntry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
-            if existingEntry.progress != 0 {
-                return existingEntry.progress
-            }else {
-                return 0
-            }
+            return existingEntry.progress
         }
         return 0
     }
@@ -448,7 +648,90 @@ struct ContentView: View {
                 } catch {
                     print("Failed to save boiler model: \(error.localizedDescription)")
                 }
+            } else if amountChange == 2000 {
+                // Specjalny przypadek dla uzupełnienia bojlera
+                boilerModel.amount = 2000
+                do {
+                    try modelContext.save()
+                    print("Boiler reset to 2000 ml (full)")
+                } catch {
+                    print("Failed to save boiler model: \(error.localizedDescription)")
+                }
             }
+        }
+    }
+    
+    private func addWaterToPastDay() {
+        let calendar = Calendar.current
+        let selectedDate = calendar.startOfDay(for: selectedPastDate)
+        let today = calendar.startOfDay(for: Date())
+        
+        // Sprawdź czy wybrana data nie jest dzisiejsza ani przyszła
+        guard selectedDate < today else {
+            print("Nie można dodać wody do dzisiejszego lub przyszłego dnia")
+            return
+        }
+        
+        // Znajdź lub utwórz wpis dla wybranej daty
+        var waterEntry: WaterProgress
+        if let existingEntry = waterProgresses.first(where: { calendar.isDate($0.date, inSameDayAs: selectedDate) }) {
+            waterEntry = existingEntry
+        } else {
+            waterEntry = WaterProgress(progress: 0, maxProgress: 4000)
+            waterEntry.date = selectedDate
+            modelContext.insert(waterEntry)
+        }
+        
+        // Dodaj wodę do wpisu
+        waterEntry.progress += Double(pastDayAmount)
+        
+        // Obsługa bojlera dla wczorajszego dnia
+        if isPastDayBoiler && isYesterdaySelected {
+            if let boilerModel = boilerModels.first {
+                let availableBoilerWater = min(pastDayAmount, boilerModel.amount)
+                let remainingWater = pastDayAmount - availableBoilerWater
+                
+                // Odejmij dostępną wodę z dzisiejszego bojlera
+                if availableBoilerWater > 0 {
+                    boilerModel.amount -= availableBoilerWater
+                    print("Odejmiono \(availableBoilerWater) ml z dzisiejszego bojlera dla wczorajszego dnia")
+                }
+                
+                // Jeśli potrzebna dodatkowa woda, uzupełnij bojler i od razu odejmij potrzebną ilość
+                if remainingWater > 0 {
+                    boilerModel.amount = 2000 // Uzupełnij bojler do pełna
+                    boilerModel.amount -= remainingWater // Od razu odejmij potrzebną dodatkową wodę
+                    print("Uzupełniono bojler do 2000 ml i odjęto \(remainingWater) ml (dodatkowa woda)")
+                }
+                
+                print("Symulacja użycia bojlera z wczoraj:")
+                print("- Dostępna woda w bojlerze: \(availableBoilerWater) ml")
+                if remainingWater > 0 {
+                    print("- Dodatkowa woda (nie z bojlera): \(remainingWater) ml")
+                }
+                print("- Końcowy stan bojlera: \(boilerModel.amount) ml")
+            }
+        }
+        
+        // Zaktualizuj DailyCountModel dla wybranej daty
+        var dailyCountEntry: DailyCountModel
+        if let existingDailyEntry = dailyCountModels.first(where: { calendar.isDate($0.date, inSameDayAs: selectedDate) }) {
+            dailyCountEntry = existingDailyEntry
+        } else {
+            dailyCountEntry = DailyCountModel(dailyCount: 0, date: selectedDate, done: false)
+            modelContext.insert(dailyCountEntry)
+        }
+        
+        // Sprawdź czy cel dzienny został osiągnięty
+        dailyCountEntry.done = waterEntry.progress >= 4000
+        
+        // Zapisz zmiany
+        do {
+            try modelContext.save()
+            print("Dodano \(pastDayAmount) ml wody do dnia \(selectedDate.formatted(date: .abbreviated, time: .omitted))")
+            print("Nowy postęp dla tego dnia: \(waterEntry.progress) ml")
+        } catch {
+            print("Błąd podczas zapisywania: \(error.localizedDescription)")
         }
     }
     
@@ -535,7 +818,7 @@ struct ContentView: View {
         let currentHour = calendar.component(.hour, from: now)
         let currentMinute = calendar.component(.minute, from: now)
         
-        let startHour = 10
+        let startHour = 9
         let startMinute = 0
         
         let totalMinutesSinceStart = (currentHour - startHour) * 60 + (currentMinute - startMinute)
@@ -556,9 +839,9 @@ struct ContentView: View {
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
         let times = [
-            (10, 0), (10, 50), (11, 40), (12, 30), (13, 20), (14, 10),
-            (15, 0), (15, 50), (16, 40), (17, 30), (18, 20), (19, 10),
-            (20, 0), (20, 50), (21, 40), (22, 33)
+            (09, 0), (09, 50), (10, 40), (11, 30), (12, 20), (13, 10),
+            (14, 0), (14, 50), (15, 40), (16, 30), (17, 20), (18, 10),
+            (19, 0), (19, 50), (20, 40), (21, 00)
         ]
         
         print("\nRozpoczynam planowanie powiadomień na dziś...")
@@ -569,7 +852,7 @@ struct ContentView: View {
         
         var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
         
-        let lastNotificationTime = calendar.date(bySettingHour: 22, minute: 33, second: 0, of: now)!
+        let lastNotificationTime = calendar.date(bySettingHour: 21, minute: 0, second: 0, of: now)!
         let shouldPlanForTomorrow = now > lastNotificationTime
         
         if shouldPlanForTomorrow {
@@ -659,6 +942,40 @@ struct ContentView: View {
 
     func scheduleAllWeeklyNotifications() async {
         await scheduleDailyNotificationsWithReset()
+    }
+    
+    private func startDynamicUpdate() {
+        // Zatrzymaj istniejący timer
+        updateTimer?.invalidate()
+        
+        // Uruchom nowy timer co sekundę
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            currentTime = Date()
+        }
+        
+        // Sprawdź czy to nowy dzień i zresetuj jeśli potrzeba
+        checkAndResetForNewDay()
+    }
+    
+    private func stopDynamicUpdate() {
+        updateTimer?.invalidate()
+        updateTimer = nil
+    }
+    
+    private func checkAndResetForNewDay() {
+        let calendar = Calendar.current
+        let now = Date()
+        let today = calendar.startOfDay(for: now)
+        
+        // Sprawdź czy to północ (00:00)
+        let hour = calendar.component(.hour, from: now)
+        let minute = calendar.component(.minute, from: now)
+        
+        if hour == 0 && minute == 0 {
+            // To nowy dzień - zresetuj postęp
+            print("Nowy dzień - reset postępu wody")
+            // Postęp automatycznie się zresetuje bo nie ma wpisu dla nowego dnia
+        }
     }
 }
 
