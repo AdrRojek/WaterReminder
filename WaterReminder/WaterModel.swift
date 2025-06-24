@@ -6,11 +6,13 @@ class WaterProgress {
     var progress: Double
     var maxProgress: Double
     var date: Date
+    var kreatyna: Bool = false
     
-    init(progress: Double = 0.0, maxProgress: Double = 4000) {
+    init(progress: Double = 0.0, maxProgress: Double = 4000, kreatyna: Bool = false) {
         self.progress = progress
         self.maxProgress = maxProgress
         self.date = Date()
+        self.kreatyna = kreatyna
     }
 }
 

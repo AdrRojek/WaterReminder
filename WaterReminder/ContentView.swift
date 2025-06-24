@@ -159,6 +159,13 @@ struct ContentView: View {
                             HStack {
                                 Text("\(entry.date.formatted(date: .abbreviated, time: .shortened))")
                                 Spacer()
+                                if entry.kreatyna {
+                                    Text("K")
+                                        .font(.caption).fontWeight(.bold)
+                                        .frame(width: 22, height: 22)
+                                        .background(Circle().fill(Color.white))
+                                        .foregroundColor(.black)
+                                }
                                 Text("\(Int(entry.progress)) ml")
                                     .foregroundStyle(entry.progress < 2500 ? .red : (entry.progress < 4000 ? .yellow : .green))
                                     .fontWeight(.bold)
@@ -175,6 +182,21 @@ struct ContentView: View {
                 Spacer()
                 
                 HStack {
+                    Button(action: {
+                        toggleKreatynaForToday()
+                    }) {
+                        Image("protein")
+                            .resizable()
+                            .frame(width: 28, height: 28)
+                            .padding(4)
+                            .background(isKreatynaToday() ? Color.green.opacity(0.7) : Color.gray.opacity(0.3))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle().stroke(isKreatynaToday() ? Color.green : Color.gray, lineWidth: 2)
+                            )
+                    }
+                    .padding(.trailing, 8)
+                    
                     Spacer()
                     
                     Button("Jednak nie wypiłem") {
@@ -966,15 +988,40 @@ struct ContentView: View {
         let calendar = Calendar.current
         let now = Date()
         let today = calendar.startOfDay(for: now)
-        
-        // Sprawdź czy to północ (00:00)
         let hour = calendar.component(.hour, from: now)
         let minute = calendar.component(.minute, from: now)
-        
         if hour == 0 && minute == 0 {
-            // To nowy dzień - zresetuj postęp
-            print("Nowy dzień - reset postępu wody")
-            // Postęp automatycznie się zresetuje bo nie ma wpisu dla nowego dnia
+            print("Nowy dzień - reset postępu wody i kreatyny")
+            resetKreatynaForToday()
+        }
+    }
+    
+    private func toggleKreatynaForToday() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let entry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            entry.kreatyna.toggle()
+            do { try modelContext.save() } catch { print(error) }
+        } else {
+            let newEntry = WaterProgress(progress: 0, maxProgress: 4000, kreatyna: true)
+            newEntry.date = today
+            modelContext.insert(newEntry)
+            do { try modelContext.save() } catch { print(error) }
+        }
+    }
+    
+    private func isKreatynaToday() -> Bool {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let entry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            return entry.kreatyna
+        }
+        return false
+    }
+    
+    private func resetKreatynaForToday() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let entry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
+            entry.kreatyna = false
+            do { try modelContext.save() } catch { print(error) }
         }
     }
 }
