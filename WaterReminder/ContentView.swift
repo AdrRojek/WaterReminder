@@ -337,18 +337,7 @@ struct ContentView: View {
                                     } catch {
                                         print("Failed to update boiler model: \(error.localizedDescription)")
                                     }
-                                }else if(newAmount > 2000){
-                                    subtractWaterProgress(Double(2000-boilerModel.amount))
-                                    boilerModel.amount = 2000
-                                    do {
-                                        try modelContext.save()
-                                        print("Boiler water updated to \(boilerModel.amount) ml")
-                                    } catch {
-                                        print("Failed to update boiler model: \(error.localizedDescription)")
-                                    }
                                 }
-                                
-                                showPopup = false
                             }
                             .padding()
                             .background(Color.blue)
@@ -358,6 +347,15 @@ struct ContentView: View {
                     }
                     Spacer()
                     
+                    Button("Reset boilera") {
+                        resetBoilerToFull()
+                        showPopup = false
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
                     Button("Resetuj cały dzień"){
                         showResetPopup = true
                     }
@@ -365,7 +363,6 @@ struct ContentView: View {
                     .background(Color.red)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                    
                     
                 }
                 .padding()
@@ -1022,6 +1019,18 @@ struct ContentView: View {
         if let entry = waterProgresses.first(where: { Calendar.current.isDate($0.date, inSameDayAs: today) }) {
             entry.kreatyna = false
             do { try modelContext.save() } catch { print(error) }
+        }
+    }
+    
+    private func resetBoilerToFull() {
+        if let boilerModel = boilerModels.first {
+            boilerModel.amount = 2000
+            do {
+                try modelContext.save()
+                print("Boiler reset to 2000 ml")
+            } catch {
+                print("Failed to reset boiler model: \(error.localizedDescription)")
+            }
         }
     }
 }
